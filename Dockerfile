@@ -8,7 +8,7 @@ ENV POETRY_NO_INTERACTION=1 \
 # Instala o poetry e as dependências
 RUN pip install poetry
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-dev --no-root
+RUN poetry install --only=main --no-root
 
 # Estágio 2: Final
 FROM python:3.12-slim
@@ -16,6 +16,7 @@ WORKDIR /app
 
 # Copia as dependências instaladas do builder
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copia o código da aplicação
 COPY ./urbansoccer_server ./urbansoccer_server
