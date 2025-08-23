@@ -1,0 +1,72 @@
+# ===================================================================
+# Arquivos de Ambiente Virtual
+# Nunca comite sua pasta de ambiente virtual
+# ===================================================================
+.venv/
+venv/
+ENV/
+env/
+
+# ===================================================================
+# Arquivos de Configuração de Ambiente
+# Contém informações sensíveis como senhas e chaves
+# ===================================================================
+.env
+.env.local
+
+
+# ===================================================================
+# Arquivos compilados e cache do Python
+# Gerados automaticamente pelo interpretador
+# ===================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ===================================================================
+# Caches de Ferramentas de Desenvolvimento
+# Gerados por linters, formatadores e testes
+# ===================================================================
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# ===================================================================
+# Relatórios de Testes e Cobertura
+# Gerados ao rodar os testes com coverage
+# ===================================================================
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# ===================================================================
+# Arquivos de Build e Distribuição
+# Gerados ao empacotar o projeto
+# ===================================================================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+
+
+# ===================================================================
+# Configurações de IDEs e Editores
+# Evita que configurações pessoais de ambiente sejam comitadas
+# ===================================================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ===================================================================
+# Arquivos de Sistema Operacional
+# ===================================================================
+.DS_Store
+Thumbs.db
+
+# ===================================================================
+# Arquivos de Log
+# ===================================================================
+*.log
