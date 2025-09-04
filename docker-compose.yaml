@@ -9,6 +9,9 @@ services:
     environment:
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: urbansoccer_db
+      SECRET_KEY: Joao2006@
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
     depends_on:
       mongo:
         condition: service_healthy
@@ -19,7 +22,7 @@ services:
     container_name: urbansoccer_mongo
     restart: always
     ports:
-      - "27018:27017"
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
     healthcheck:

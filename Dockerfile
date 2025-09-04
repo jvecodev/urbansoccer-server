@@ -5,18 +5,16 @@ WORKDIR /app
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_CREATE=false
 
-# Instala o poetry e as dependências
+# Instala o poetry e as dependências principais via pip (temporário)
 RUN pip install poetry
-COPY pyproject.toml poetry.lock ./
-RUN poetry install --only=main --no-root
+RUN pip install fastapi[standard] motor pydantic-settings python-jose[cryptography] passlib[bcrypt] python-multipart email-validator
 
 # Estágio 2: Final
 FROM python:3.12-slim
 WORKDIR /app
 
-# Copia as dependências instaladas do builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Instala as dependências via pip diretamente
+RUN pip install fastapi[standard] motor pydantic-settings python-jose[cryptography] passlib[bcrypt] python-multipart email-validator
 
 # Copia o código da aplicação
 COPY ./urbansoccer_server ./urbansoccer_server
