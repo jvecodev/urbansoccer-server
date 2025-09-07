@@ -27,14 +27,20 @@ async def create_user(user_data: dict) -> dict:
     user_data["password"] = hash_password(user_data["password"])
     result = await user_collection.insert_one(user_data)
     new_user = await user_collection.find_one({"_id": result.inserted_id})
-    # Remove a senha do retorno
+    # Remove a senha do retorno e converte _id para string
     if new_user and "password" in new_user:
         del new_user["password"]
+    if new_user and "_id" in new_user:
+        new_user["_id"] = str(new_user["_id"])
     return new_user
 
 async def get_all_users() -> List[dict]:
     """Retorna todos os usuários sem as senhas"""
     users = await user_collection.find({}, {"password": 0}).to_list(length=None)
+    # Converte _id para string em todos os usuários
+    for user in users:
+        if "_id" in user:
+            user["_id"] = str(user["_id"])
     return users
 
 async def get_user_by_id(user_id: str) -> Optional[dict]:
@@ -42,11 +48,16 @@ async def get_user_by_id(user_id: str) -> Optional[dict]:
     if not ObjectId.is_valid(user_id):
         return None
     user = await user_collection.find_one({"_id": ObjectId(user_id)}, {"password": 0})
+    if user and "_id" in user:
+        user["_id"] = str(user["_id"])
     return user
 
 async def get_user_by_email(email: str) -> Optional[dict]:
     """Busca usuário por email (incluindo senha para autenticação)"""
-    return await user_collection.find_one({"email": email})
+    user = await user_collection.find_one({"email": email})
+    if user and "_id" in user:
+        user["_id"] = str(user["_id"])
+    return user
 
 async def authenticate_user(email: str, password: str) -> Optional[dict]:
     """Autentica um usuário"""

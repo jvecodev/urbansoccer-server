@@ -1,6 +1,7 @@
 # urbansoccer_server/schemas/user_schema.py
-from pydantic import BaseModel, EmailStr, Field
-from typing import List, Optional
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import List, Optional, Any
+from bson import ObjectId
 
 class UserBase(BaseModel):
     name: str = Field(..., min_length=3, max_length=50)
@@ -16,12 +17,18 @@ class UserUpdate(BaseModel):
 class UserPublic(UserBase):
     id: str = Field(..., alias="_id")
 
-    class Config:
-        populate_by_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {
-            "ObjectId": str
-        }
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        json_encoders={ObjectId: str}
+    )
+    
+    @classmethod
+    def from_mongo(cls, user_dict: dict) -> "UserPublic":
+        """Converte um documento do MongoDB para UserPublic"""
+        if user_dict and "_id" in user_dict:
+            user_dict["_id"] = str(user_dict["_id"])
+        return cls(**user_dict)
 
 class UserList(BaseModel):
     users: List[UserPublic]
