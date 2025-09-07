@@ -48,7 +48,7 @@ async def login_user(user_credentials: UserLogin):
     access_token = create_access_token(
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "name": user["name"]}
 
 @router.get("/me", status_code=status.HTTP_200_OK, response_model=UserPublic)
 async def get_current_user_profile(current_user: dict = Depends(get_current_user)):

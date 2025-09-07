@@ -1,12 +1,13 @@
 # urbansoccer_server/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from urbansoccer_server.api import users
+from urbansoccer_server.api import users, players, campaigns
+from urbansoccer_server.core.database_init import initialize_database
 
 app = FastAPI(
     title="Urban Soccer Server",
-    description="Backend para o jogo Urban Soccer RPG com autenticação de usuários.",
-    version="0.1.0"
+    description="Backend para o jogo Urban Soccer RPG com autenticação de usuários, personagens e campanhas.",
+    version="0.2.0"
 )
 
 # Configuração do CORS
@@ -18,9 +19,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Inclui o roteador de usuários na aplicação principal
+# Evento de inicialização
+@app.on_event("startup")
+async def startup_event():
+    """Executa a inicialização do banco quando a aplicação inicia"""
+    await initialize_database()
+
+# Inclui os roteadores na aplicação principal
 app.include_router(users.router, prefix="/users")
+app.include_router(players.router)
+app.include_router(campaigns.router)
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Urban Soccer API"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "urban-soccer-server"}

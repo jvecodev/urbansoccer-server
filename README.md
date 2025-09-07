@@ -1,23 +1,58 @@
-# ⚽ Urban Soccer Server API - Trainee Wise System
+# Urban Soccer Server 🏈
 
-## 📖 Sobre o Projeto
-**Urban Soccer Server** é o backend oficial para o jogo **Urban Soccer RPG**.  
-Construído com **FastAPI**, este servidor fornece uma API assíncrona, de alta performance, para gerenciar toda a lógica do jogo, incluindo jogadores, times, partidas e progressão de personagens.
+Backend para o jogo Urban Soccer RPG com sistema completo de usuários, personagens únicos e campanhas.
 
-O projeto foi estruturado seguindo uma arquitetura inspirada no padrão **MVC (Model-View-Controller)** para garantir um código limpo, organizado, escalável e de fácil manutenção.
+## 🚀 Quick Start com Docker
 
----
+### Pré-requisitos
+- Docker
+- Docker Compose
 
-## 🏛️ Arquitetura do Projeto
-Para manter a organização e a separação de responsabilidades, o projeto segue a seguinte estrutura:
+### Setup Completo (1 comando)
 
-- **Model (/models):** A camada de acesso aos dados. É a única parte do sistema que se comunica diretamente com o banco de dados **MongoDB**. Contém toda a lógica para criar, ler, atualizar e deletar documentos.
-- **Schemas (/schemas):** Atua como a "View" da API. Define a estrutura, validação e formato dos dados que são enviados e recebidos através dos endpoints, utilizando **Pydantic**.
-- **API/Routers (/api):** A camada "Controller". Contém os endpoints (rotas) da API. É responsável por receber as requisições HTTP, chamar as funções apropriadas da camada **Model** e retornar as respostas formatadas pelos **Schemas**.
-- **Core (/core):** Armazena as configurações centrais da aplicação, como a conexão com o banco de dados e variáveis de ambiente.
-- **Main (main.py):** O ponto de entrada da aplicação. Inicializa a instância do **FastAPI** e anexa os roteadores definidos na camada de API.
+```bash
+# Primeira vez
+./docker-setup.sh setup
+```
 
----
+Isso irá:
+1. ✅ Construir e iniciar API + MongoDB
+2. ✅ Criar os 5 personagens padrão
+3. ✅ Mostrar status dos serviços
+
+### Comandos Disponíveis
+
+```bash
+# Setup completo na primeira vez
+./docker-setup.sh setup
+
+# Iniciar serviços
+./docker-setup.sh start
+
+# Parar serviços
+./docker-setup.sh stop
+
+# Reiniciar serviços
+./docker-setup.sh restart
+
+# Ver status
+./docker-setup.sh status
+
+# Ver logs em tempo real
+./docker-setup.sh logs
+
+# Popular personagens (se ainda não foi feito)
+./docker-setup.sh populate
+
+# Reset completo (CUIDADO: apaga tudo!)
+./docker-setup.sh reset
+```
+
+### Acessos
+
+- **API**: http://localhost:8000
+- **Documentação Interativa**: http://localhost:8000/docs
+- **MongoDB**: localhost:27017
 
 ## 📂 Estrutura de Arquivos
 ```bash
