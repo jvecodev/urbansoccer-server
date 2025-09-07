@@ -4,8 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     MONGO_URI: str
     MONGO_DB: str
-    SECRET_KEY: str = "sua-chave-secreta-super-forte-aqui"
-    ALGORITHM: str = "HS256"
+    SECRET_KEY: str 
+    ALGORITHM: str 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     model_config = SettingsConfigDict(

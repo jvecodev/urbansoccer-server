@@ -13,7 +13,7 @@ from urbansoccer_server.schemas.user_schema import (
 from urbansoccer_server.core.auth import create_access_token, get_current_user
 from urbansoccer_server.core.config import settings
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(tags=["Users"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserPublic)
 async def register_user(user: UserCreate):
