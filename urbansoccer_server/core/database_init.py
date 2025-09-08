@@ -18,9 +18,10 @@ DEFAULT_PLAYERS = [
         "description": "Um Velocista incrivelmente rápido, capaz de driblar até o vento.",
         "rarity": "unique",
         "stats": {
-            "health": 120,
-            "attack": 15,
+            "speed": 150,
+            "attack": 100,
             "defense": 10,
+            "leadership": 5,
             "specialAbility": "Corrida Relâmpago"
         },
         "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/valocista.jpg",
@@ -31,9 +32,10 @@ DEFAULT_PLAYERS = [
         "description": "Maestro do controle de bola, visão de águia",
         "rarity": "unique",
         "stats": {
-            "health": 90,
-            "attack": 20,
-            "defense": 8,
+            "speed": 50,
+            "attack": 140,
+            "defense": 80,
+            "leadership": 60,
             "specialAbility": "Passe Mágico"
         },
         "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Maestro.jpg",
@@ -44,9 +46,10 @@ DEFAULT_PLAYERS = [
         "description": "Artilheiro nato, com fome de gols e vitórias.",
         "rarity": "default",
         "stats": {
-            "health": 150,
-            "attack": 12,
-            "defense": 18,
+            "speed": 80,
+            "attack": 150,
+            "defense": 10,
+            "leadership": 30,
             "specialAbility": "Chute Poderoso"
         },
         "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Artilheiro.jpg",
@@ -57,9 +60,10 @@ DEFAULT_PLAYERS = [
         "description": "Um defensor imponente, um muro humano.",
         "rarity": "default",
         "stats": {
-            "health": 80,
-            "attack": 25,
-            "defense": 5,
+            "speed": 50,
+            "attack": 10,
+            "defense": 150,
+            "leadership": 80,
             "specialAbility": "Bloqueio Imbatível"
         },
         "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/defensor.jpg",
@@ -70,9 +74,10 @@ DEFAULT_PLAYERS = [
         "description": "Líder nato, inspira e motiva o time a cada jogo.",
         "rarity": "default",
         "stats": {
-            "health": 100,
-            "attack": 18,
-            "defense": 7,
+            "speed": 30,
+            "attack": 20,
+            "defense": 140,
+            "leadership": 150,
             "specialAbility": "Comando de Equipe"
         },
         "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Lider.jpg",

@@ -4,9 +4,10 @@ from typing import List, Optional
 from datetime import datetime
 
 class PlayerStats(BaseModel):
-    health: int = Field(..., ge=1, le=200)
-    attack: int = Field(..., ge=1, le=50)
-    defense: int = Field(..., ge=1, le=50)
+    speed: int = Field(..., ge=1, le=200)
+    attack: int = Field(..., ge=1, le=200)
+    defense: int = Field(..., ge=1, le=200)
+    leadership: int = Field(..., ge=1, le=200)
     specialAbility: str
 
 class PlayerBase(BaseModel):
