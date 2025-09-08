@@ -23,7 +23,7 @@ DEFAULT_PLAYERS = [
             "defense": 10,
             "specialAbility": "Corrida Relâmpago"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/velocista.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/valocista.jpg",
         "isAvailable": True
     },
     {
@@ -36,7 +36,7 @@ DEFAULT_PLAYERS = [
             "defense": 8,
             "specialAbility": "Passe Mágico"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/maestro.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Maestro.jpg",
         "isAvailable": True
     },
     {
@@ -49,7 +49,7 @@ DEFAULT_PLAYERS = [
             "defense": 18,
             "specialAbility": "Chute Poderoso"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/o-artilheiro.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Artilheiro.jpg",
         "isAvailable": True
     },
     {
@@ -62,7 +62,7 @@ DEFAULT_PLAYERS = [
             "defense": 5,
             "specialAbility": "Bloqueio Imbatível"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/mago-das-chamas.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/defensor.jpg",
         "isAvailable": True
     },
     {
@@ -75,7 +75,7 @@ DEFAULT_PLAYERS = [
             "defense": 7,
             "specialAbility": "Comando de Equipe"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/ladino-sombrio.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Lider.jpg",
         "isAvailable": True
     }
 ]
