@@ -157,13 +157,21 @@ async def initialize_database():
         player_collection = db["players"]
         user_collection = db["users"] 
         campaign_collection = db["campaigns"]
+        user_character_collection = db["user_characters"]
 
         try:
+            # Índices existentes
             await user_collection.create_index("email", unique=True)
             await campaign_collection.create_index([("userId", 1)])
             await campaign_collection.create_index([("playerId", 1)])
             await player_collection.create_index([("rarity", 1)])
             await player_collection.create_index([("isAvailable", 1)])
+            
+            # Novos índices para user_characters
+            await user_character_collection.create_index([("userId", 1)])
+            await user_character_collection.create_index([("playerId", 1)])
+            await user_character_collection.create_index([("userId", 1), ("characterName", 1)], unique=True)
+            await user_character_collection.create_index([("createdAt", 1)])
         except Exception as e:
             logger.info(f"⚠️ Índices já existem ou erro: {e}")
         
@@ -208,8 +216,9 @@ async def initialize_database():
         final_players = await player_collection.count_documents({})
         final_users = await user_collection.count_documents({})
         final_campaigns = await campaign_collection.count_documents({})
+        final_characters = await user_character_collection.count_documents({})
         
-        logger.info(f"📊 Resumo do banco: {final_players} players, {final_users} usuários, {final_campaigns} campanhas")
+        logger.info(f"📊 Resumo do banco: {final_players} players, {final_users} usuários, {final_campaigns} campanhas, {final_characters} personagens")
         
         await client.close()
         return True
