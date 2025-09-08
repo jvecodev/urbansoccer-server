@@ -14,73 +14,68 @@ logger = logging.getLogger(__name__)
 # Players padrão
 DEFAULT_PLAYERS = [
     {
-        "name": "Cavaleiro Sombrio",
-        "description": "Um guerreiro formidável que usa o poder das sombras para dominar o campo.",
+        "name": "Velocista",
+        "description": "Um Velocista incrivelmente rápido, capaz de driblar até o vento.",
         "rarity": "unique",
         "stats": {
             "health": 120,
             "attack": 15,
             "defense": 10,
-            "specialAbility": "Golpe Fantasma"
+            "specialAbility": "Corrida Relâmpago"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/cavaleiro-sombrio.png",
-        "modelUrl": "https://cdn.urbansoccer.com/models/cavaleiro-sombrio.glb",
+        "imageUrl": "https://cdn.urbansoccer.com/players/velocista.png",
         "isAvailable": True
     },
     {
-        "name": "Arqueiro Élfico",
-        "description": "Mestre em precisão e agilidade, nunca erra o alvo.",
+        "name": "Maestro",
+        "description": "Maestro do controle de bola, visão de águia",
         "rarity": "unique",
         "stats": {
             "health": 90,
             "attack": 20,
             "defense": 8,
-            "specialAbility": "Tiro Certeiro"
+            "specialAbility": "Passe Mágico"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/arqueiro-elfico.png",
-        "modelUrl": "https://cdn.urbansoccer.com/models/arqueiro-elfico.glb",
+        "imageUrl": "https://cdn.urbansoccer.com/players/maestro.png",
         "isAvailable": True
     },
     {
-        "name": "Paladino Dourado",
-        "description": "Protetor dos fracos, sua defesa é imbatível.",
+        "name": "O Artilheiro",
+        "description": "Artilheiro nato, com fome de gols e vitórias.",
         "rarity": "default",
         "stats": {
             "health": 150,
             "attack": 12,
             "defense": 18,
-            "specialAbility": "Escudo Sagrado"
+            "specialAbility": "Chute Poderoso"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/paladino-dourado.png",
-        "modelUrl": "https://cdn.urbansoccer.com/models/paladino-dourado.glb",
+        "imageUrl": "https://cdn.urbansoccer.com/players/o-artilheiro.png",
         "isAvailable": True
     },
     {
-        "name": "Mago das Chamas",
-        "description": "Domina o elemento fogo com maestria devastadora.",
+        "name": "Defensor",
+        "description": "Um defensor imponente, um muro humano.",
         "rarity": "default",
         "stats": {
             "health": 80,
             "attack": 25,
             "defense": 5,
-            "specialAbility": "Bola de Fogo"
+            "specialAbility": "Bloqueio Imbatível"
         },
         "imageUrl": "https://cdn.urbansoccer.com/players/mago-das-chamas.png",
-        "modelUrl": "https://cdn.urbansoccer.com/models/mago-das-chamas.glb",
         "isAvailable": True
     },
     {
-        "name": "Ladino Sombrio",
-        "description": "Rápido e furtivo, ataca quando menos se espera.",
+        "name": "Lider",
+        "description": "Líder nato, inspira e motiva o time a cada jogo.",
         "rarity": "default",
         "stats": {
             "health": 100,
             "attack": 18,
             "defense": 7,
-            "specialAbility": "Ataque Furtivo"
+            "specialAbility": "Comando de Equipe"
         },
         "imageUrl": "https://cdn.urbansoccer.com/players/ladino-sombrio.png",
-        "modelUrl": "https://cdn.urbansoccer.com/models/ladino-sombrio.glb",
         "isAvailable": True
     }
 ]

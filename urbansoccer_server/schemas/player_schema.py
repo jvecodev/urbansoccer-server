@@ -15,7 +15,6 @@ class PlayerBase(BaseModel):
     rarity: str = Field(..., pattern=r"^(default|unique)$")
     stats: PlayerStats
     imageUrl: str = Field(..., description="URL da imagem do personagem")
-    modelUrl: str = Field(..., description="URL do modelo 3D do personagem")
     isAvailable: bool = True
 
 class PlayerCreate(PlayerBase):
@@ -27,7 +26,6 @@ class PlayerUpdate(BaseModel):
     rarity: Optional[str] = None
     stats: Optional[PlayerStats] = None
     imageUrl: Optional[str] = None
-    modelUrl: Optional[str] = None
     isAvailable: Optional[bool] = None
 
 class PlayerPublic(PlayerBase):
