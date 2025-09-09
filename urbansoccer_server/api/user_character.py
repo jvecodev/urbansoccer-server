@@ -6,11 +6,14 @@ from urbansoccer_server.schemas.user_character_schema import (
     UserCharacterCreate,
     UserCharacterPublic,
     UserCharacterList,
-    UserCharacterUpdate
+    UserCharacterUpdate,
+    UserCharacterWithPlayer,
+    UserCharacterWithPlayerList
 )
 from urbansoccer_server.core.auth import get_current_user
 
 router = APIRouter(tags=["User Characters"])
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserCharacterPublic)
 async def create_character(
@@ -33,26 +36,26 @@ async def create_character(
     
     return created_character
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=UserCharacterList)
+@router.get("/", status_code=status.HTTP_200_OK, response_model=UserCharacterWithPlayerList)
 async def get_my_characters(current_user: dict = Depends(get_current_user)):
     """
-    Retorna todos os personagens do usuário atual
+    Retorna todos os personagens do usuário atual com informações completas dos players
     """
     user_id = current_user["_id"]
-    characters = await user_character_model.get_user_characters(user_id)
+    characters = await user_character_model.get_user_characters_with_players(user_id)
     
     return {"characters": characters}
 
-@router.get("/{character_id}", status_code=status.HTTP_200_OK, response_model=UserCharacterPublic)
+@router.get("/{character_id}", status_code=status.HTTP_200_OK, response_model=UserCharacterWithPlayer)
 async def get_character(
     character_id: str,
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Retorna um personagem específico do usuário
+    Retorna um personagem específico do usuário com informações completas do player
     """
     user_id = current_user["_id"]
-    character = await user_character_model.get_user_character_by_id(character_id, user_id)
+    character = await user_character_model.get_user_character_with_player(character_id, user_id)
     
     if not character:
         raise HTTPException(

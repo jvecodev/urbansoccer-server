@@ -39,3 +39,24 @@ class UserCharacterPublic(UserCharacterBase):
 class UserCharacterList(BaseModel):
     """Lista de personagens do usuário"""
     characters: List[UserCharacterPublic]
+
+class UserCharacterWithPlayer(BaseModel):
+    """Personagem do usuário com informações completas do player"""
+    id: str = Field(..., alias="_id")
+    characterName: str
+    playerId: str
+    userId: str
+    createdAt: datetime
+    
+    # Informações do player (arquétipo)
+    player: dict = Field(..., description="Dados completos do player escolhido")
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        json_encoders={"ObjectId": str}
+    )
+
+class UserCharacterWithPlayerList(BaseModel):
+    """Lista de personagens com informações dos players"""
+    characters: List[UserCharacterWithPlayer]
