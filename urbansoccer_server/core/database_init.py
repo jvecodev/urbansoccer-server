@@ -2,10 +2,11 @@
 """
 Inicialização automática do banco de dados com players e campanhas padrão
 """
+import logging
 import asyncio
-import os
+import concurrent.futures
 from datetime import datetime
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from urbansoccer_server.core.config import settings
 import logging
 
@@ -150,7 +151,7 @@ async def initialize_database():
     """Inicializa o banco de dados com dados padrão"""
     try:
 
-        client = AsyncIOMotorClient(settings.MONGO_URI)
+        client = AsyncMongoClient(settings.MONGO_URI)
         db = client[settings.MONGO_DB]
         
         # Collections

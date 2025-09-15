@@ -1,5 +1,5 @@
 # urbansoccer_server/models/user_character_model.py
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from bson import ObjectId
 from typing import List, Optional
 from datetime import datetime
@@ -8,7 +8,7 @@ from urbansoccer_server.core.config import settings
 from urbansoccer_server.models.player_model import get_player_by_id
 
 # Conexão com o banco
-client = AsyncIOMotorClient(settings.MONGO_URI)
+client = AsyncMongoClient(settings.MONGO_URI)
 db = client[settings.MONGO_DB]
 user_character_collection = db["user_characters"]
 

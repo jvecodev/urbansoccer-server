@@ -1,5 +1,5 @@
 # urbansoccer_server/models/user_model.py
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from bson import ObjectId
 from typing import List, Optional
 from passlib.context import CryptContext
@@ -10,7 +10,7 @@ from urbansoccer_server.core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Conexão com o banco
-client = AsyncIOMotorClient(settings.MONGO_URI)
+client = AsyncMongoClient(settings.MONGO_URI)
 db = client[settings.MONGO_DB]
 user_collection = db["users"]
 
