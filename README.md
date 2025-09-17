@@ -80,7 +80,7 @@ urbansoccer-server/
 ## 🚀 Tecnologias Principais
 - **FastAPI**: Framework web moderno para construção de APIs em Python.
 - **MongoDB**: Banco de dados NoSQL orientado a documentos, ideal para flexibilidade e escalabilidade.
-- **Motor**: Driver assíncrono oficial para usar MongoDB com asyncio.
+- **AsyncMongoClient**: Driver assíncrono oficial para usar MongoDB com pymongo.
 - **Pydantic**: Para validação de dados e gerenciamento de configurações.
 - **Poetry**: Gerenciamento de dependências e ambientes virtuais.
 - **Docker & Docker Compose**: Para criar um ambiente containerizado, consistente e isolado.

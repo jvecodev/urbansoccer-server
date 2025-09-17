@@ -1,5 +1,5 @@
 # urbansoccer_server/models/campaign_model.py
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from bson import ObjectId
 from typing import List, Optional
 from datetime import datetime
@@ -7,7 +7,7 @@ from datetime import datetime
 from urbansoccer_server.core.config import settings
 
 # Conexão com o banco
-client = AsyncIOMotorClient(settings.MONGO_URI)
+client = AsyncMongoClient(settings.MONGO_URI)
 db = client[settings.MONGO_DB]
 campaign_collection = db["campaigns"]
 

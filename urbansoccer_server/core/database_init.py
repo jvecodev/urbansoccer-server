@@ -2,10 +2,11 @@
 """
 Inicialização automática do banco de dados com players e campanhas padrão
 """
+import logging
 import asyncio
-import os
+import concurrent.futures
 from datetime import datetime
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from urbansoccer_server.core.config import settings
 import logging
 
@@ -18,12 +19,13 @@ DEFAULT_PLAYERS = [
         "description": "Um Velocista incrivelmente rápido, capaz de driblar até o vento.",
         "rarity": "unique",
         "stats": {
-            "health": 120,
-            "attack": 15,
+            "speed": 150,
+            "attack": 100,
             "defense": 10,
+            "leadership": 5,
             "specialAbility": "Corrida Relâmpago"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/velocista.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/valocista.jpg",
         "isAvailable": True
     },
     {
@@ -31,12 +33,13 @@ DEFAULT_PLAYERS = [
         "description": "Maestro do controle de bola, visão de águia",
         "rarity": "unique",
         "stats": {
-            "health": 90,
-            "attack": 20,
-            "defense": 8,
+            "speed": 50,
+            "attack": 140,
+            "defense": 80,
+            "leadership": 60,
             "specialAbility": "Passe Mágico"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/maestro.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Maestro.jpg",
         "isAvailable": True
     },
     {
@@ -44,12 +47,13 @@ DEFAULT_PLAYERS = [
         "description": "Artilheiro nato, com fome de gols e vitórias.",
         "rarity": "default",
         "stats": {
-            "health": 150,
-            "attack": 12,
-            "defense": 18,
+            "speed": 80,
+            "attack": 150,
+            "defense": 10,
+            "leadership": 30,
             "specialAbility": "Chute Poderoso"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/o-artilheiro.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Artilheiro.jpg",
         "isAvailable": True
     },
     {
@@ -57,12 +61,13 @@ DEFAULT_PLAYERS = [
         "description": "Um defensor imponente, um muro humano.",
         "rarity": "default",
         "stats": {
-            "health": 80,
-            "attack": 25,
-            "defense": 5,
+            "speed": 50,
+            "attack": 10,
+            "defense": 150,
+            "leadership": 80,
             "specialAbility": "Bloqueio Imbatível"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/mago-das-chamas.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/defensor.jpg",
         "isAvailable": True
     },
     {
@@ -70,12 +75,13 @@ DEFAULT_PLAYERS = [
         "description": "Líder nato, inspira e motiva o time a cada jogo.",
         "rarity": "default",
         "stats": {
-            "health": 100,
-            "attack": 18,
-            "defense": 7,
+            "speed": 30,
+            "attack": 20,
+            "defense": 140,
+            "leadership": 150,
             "specialAbility": "Comando de Equipe"
         },
-        "imageUrl": "https://cdn.urbansoccer.com/players/ladino-sombrio.png",
+        "imageUrl": "https://urban-soccer-bucket.s3.sa-east-1.amazonaws.com/Lider.jpg",
         "isAvailable": True
     }
 ]
@@ -145,20 +151,28 @@ async def initialize_database():
     """Inicializa o banco de dados com dados padrão"""
     try:
 
-        client = AsyncIOMotorClient(settings.MONGO_URI)
+        client = AsyncMongoClient(settings.MONGO_URI)
         db = client[settings.MONGO_DB]
         
         # Collections
         player_collection = db["players"]
         user_collection = db["users"] 
         campaign_collection = db["campaigns"]
+        user_character_collection = db["user_characters"]
 
         try:
+            # Índices existentes
             await user_collection.create_index("email", unique=True)
             await campaign_collection.create_index([("userId", 1)])
             await campaign_collection.create_index([("playerId", 1)])
             await player_collection.create_index([("rarity", 1)])
             await player_collection.create_index([("isAvailable", 1)])
+            
+            # Novos índices para user_characters
+            await user_character_collection.create_index([("userId", 1)])
+            await user_character_collection.create_index([("playerId", 1)])
+            await user_character_collection.create_index([("userId", 1), ("characterName", 1)], unique=True)
+            await user_character_collection.create_index([("createdAt", 1)])
         except Exception as e:
             logger.info(f"⚠️ Índices já existem ou erro: {e}")
         
@@ -203,8 +217,9 @@ async def initialize_database():
         final_players = await player_collection.count_documents({})
         final_users = await user_collection.count_documents({})
         final_campaigns = await campaign_collection.count_documents({})
+        final_characters = await user_character_collection.count_documents({})
         
-        logger.info(f"📊 Resumo do banco: {final_players} players, {final_users} usuários, {final_campaigns} campanhas")
+        logger.info(f"📊 Resumo do banco: {final_players} players, {final_users} usuários, {final_campaigns} campanhas, {final_characters} personagens")
         
         await client.close()
         return True
