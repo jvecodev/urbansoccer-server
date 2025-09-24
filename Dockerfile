@@ -9,12 +9,12 @@ ENV POETRY_NO_INTERACTION=1 \
 RUN pip install poetry
 
 # Estágio 2: Final
+# Estágio 2: Final
 FROM python:3.12-slim
 WORKDIR /app
 
-# Instala todas as dependências via pip diretamente
-# Adicionamos 'google-generativeai' à lista
-RUN pip install fastapi[standard] motor pydantic-settings python-jose[cryptography] passlib[bcrypt] python-multipart email-validator google-generativeai
+# Adicionamos 'requests' à lista
+RUN pip install fastapi[standard] motor pydantic-settings python-jose[cryptography] passlib[bcrypt] python-multipart email-validator google-generativeai requests
 
 # Copia o código da aplicação
 COPY ./urbansoccer_server ./urbansoccer_server

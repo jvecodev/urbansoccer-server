@@ -93,62 +93,14 @@ DEFAULT_ADMIN_USER = {
     "password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBdXwtO5S5bq5q"  # hash de "admin123"
 }
 
-# Campanhas padrão
-DEFAULT_CAMPAIGNS = [
-    {
-        "campaignName": "A Jornada do Cavaleiro Sombrio",
-        "status": "active",
-        "progress": {
-            "level": 1,
-            "score": 0,
-            "currentMission": "O Início da Lenda",
-            "inventory": []
-        }
-    },
-    {
-        "campaignName": "A Precisão do Arqueiro",
-        "status": "active", 
-        "progress": {
-            "level": 1,
-            "score": 0,
-            "currentMission": "Primeiro Tiro",
-            "inventory": []
-        }
-    },
-    {
-        "campaignName": "A Defesa do Paladino",
-        "status": "active",
-        "progress": {
-            "level": 1,
-            "score": 0,
-            "currentMission": "Proteger os Inocentes",
-            "inventory": []
-        }
-    },
-    {
-        "campaignName": "O Poder das Chamas",
-        "status": "active",
-        "progress": {
-            "level": 1,
-            "score": 0,
-            "currentMission": "Dominando o Fogo",
-            "inventory": []
-        }
-    },
-    {
-        "campaignName": "Nas Sombras do Ladino",
-        "status": "active",
-        "progress": {
-            "level": 1,
-            "score": 0,
-            "currentMission": "Arte da Furtividade", 
-            "inventory": []
-        }
-    }
-]
+
 
 async def initialize_database():
-    """Inicializa o banco de dados com dados padrão"""
+    """
+    Inicializa o banco de dados com dados padrão.
+    Nota: Campanhas não são mais criadas automaticamente, 
+    pois agora são geradas dinamicamente pela IA baseado nos personagens escolhidos.
+    """
     try:
 
         client = AsyncMongoClient(settings.MONGO_URI)
@@ -198,20 +150,8 @@ async def initialize_database():
         else:
             admin_user_id = admin_user["_id"]
         
-        # Verificar e criar campanhas
-        campaign_count = await campaign_collection.count_documents({})
-        
-        if campaign_count == 0:
-            
-            for i, campaign_data in enumerate(DEFAULT_CAMPAIGNS):
-                # Associa cada campanha a um player diferente
-                if i < len(created_players):
-                    campaign_data["userId"] = str(admin_user_id)
-                    campaign_data["playerId"] = str(created_players[i])
-                    campaign_data["startDate"] = datetime.utcnow()
-                    campaign_data["lastPlayedDate"] = datetime.utcnow()
-                    
-                    result = await campaign_collection.insert_one(campaign_data.copy())
+        # Nota: Campanhas agora são geradas dinamicamente pela IA
+        # Não criamos mais campanhas padrão no banco
 
         # Mostrar resumo final
         final_players = await player_collection.count_documents({})

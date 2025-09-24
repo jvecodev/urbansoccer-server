@@ -1,6 +1,9 @@
 # urbansoccer_server/api/campaigns.py
 from fastapi import APIRouter, HTTPException, status, Depends
-from urbansoccer_server.models import campaign_model, player_model
+from pydantic import BaseModel
+
+# Imports dos seus models e schemas existentes
+from urbansoccer_server.models import campaign_model, player_model, user_character_model
 from urbansoccer_server.schemas.campaign_schema import (
     CampaignCreate, 
     CampaignPublic, 
@@ -11,7 +14,45 @@ from urbansoccer_server.schemas.campaign_schema import (
 )
 from urbansoccer_server.core.auth import get_current_user
 
+# Import do novo serviço de IA que criamos
+from urbansoccer_server.services import campaign_generator
+
 router = APIRouter(prefix="/campaigns", tags=["Campaigns"])
+
+# --- ROTA NOVA PARA GERAR CAMPANHAS COM IA ---
+
+class CampaignGenerationRequest(BaseModel):
+    """Schema para o corpo da requisição da geração de campanhas."""
+    user_character_id: str
+
+@router.post("/generate-options", status_code=status.HTTP_200_OK)
+async def get_campaign_options(
+    request: CampaignGenerationRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Gera 4 opções de campanhas iniciais usando IA, baseado no personagem do usuário.
+    """
+    user_id = current_user["_id"]
+    
+    # 1. Busca o personagem do usuário para obter os detalhes do player associado
+    user_char_with_player = await user_character_model.get_user_character_with_player(request.user_character_id, user_id)
+
+    if not user_char_with_player or "player" not in user_char_with_player:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Personagem do usuário não encontrado."
+        )
+
+    # 2. Envia os detalhes do player para o serviço de IA gerar as opções
+    player_details = user_char_with_player["player"]
+    options = await campaign_generator.generate_campaign_options(player_details)
+
+    # 3. Retorna as opções para o frontend
+    return {"options": options}
+
+
+# --- ROTAS EXISTENTES (sem alteração na lógica) ---
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=CampaignPublic)
 async def create_new_campaign(
@@ -103,7 +144,6 @@ async def update_campaign(
     current_user: dict = Depends(get_current_user)
 ):
     """Atualiza dados da campanha"""
-    # Verifica se a campanha existe e pertence ao usuário
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -130,7 +170,6 @@ async def update_campaign_progress(
     current_user: dict = Depends(get_current_user)
 ):
     """Atualiza especificamente o progresso da campanha"""
-    # Verifica se a campanha existe e pertence ao usuário
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -150,7 +189,6 @@ async def abandon_campaign(
     current_user: dict = Depends(get_current_user)
 ):
     """Marca campanha como abandonada"""
-    # Verifica se a campanha existe e pertence ao usuário
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -175,7 +213,6 @@ async def complete_campaign(
     current_user: dict = Depends(get_current_user)
 ):
     """Marca campanha como completada"""
-    # Verifica se a campanha existe e pertence ao usuário
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -200,7 +237,6 @@ async def delete_campaign(
     current_user: dict = Depends(get_current_user)
 ):
     """Deleta uma campanha"""
-    # Verifica se a campanha existe e pertence ao usuário
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )

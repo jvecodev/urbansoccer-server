@@ -4,9 +4,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     MONGO_URI: str
     MONGO_DB: str
-    SECRET_KEY: str 
-    ALGORITHM: str 
+    SECRET_KEY: str
+    ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+    OLLAMA_BASE_URL: str
 
     model_config = SettingsConfigDict(
         env_file=".env",
