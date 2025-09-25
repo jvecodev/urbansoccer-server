@@ -13,13 +13,13 @@ services:
       ALGORITHM: ${ALGORITHM}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
-      COQUI_TTS_URL: ${COQUI_TTS_URL} 
+      COQUI_TTS_URL: ${COQUI_TTS_URL}
     depends_on:
       mongo:
         condition: service_healthy
       ollama:
         condition: service_started
-      coqui-tts: 
+      coqui-tts:
         condition: service_started
     command: uvicorn urbansoccer_server.main:app --host 0.0.0.0 --port 8000 --reload
 
@@ -51,12 +51,18 @@ services:
     container_name: urbansoccer_tts
     restart: unless-stopped
     ports:
-      - "5002:5002"
+      - "5002:5002" # A porta interna deste é 5002
     volumes:
       - coqui_tts_data:/root/.local/share/tts
-    command: tts-server --model_name "tts_models/multilingual/multi-dataset/xtts_v2"
+    environment:
+      - COQUI_TOS_AGREED=1
+    entrypoint: [
+      "tts-server", 
+      "--model_path", "/root/.local/share/tts/tts_models--multilingual--multi-dataset--xtts_v2/", 
+      "--config_path", "/root/.local/share/tts/tts_models--multilingual--multi-dataset--xtts_v2/config.json"
+    ]
 
 volumes:
   mongo_data:
   ollama_data:
-  coqui_tts_data: 
+  coqui_tts_data:
