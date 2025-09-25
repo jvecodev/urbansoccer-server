@@ -11,6 +11,20 @@ client = AsyncMongoClient(settings.MONGO_URI)
 db = client[settings.MONGO_DB]
 campaign_collection = db["campaigns"]
 
+def normalize_campaign_data(campaign: dict) -> dict:
+    """Normaliza dados da campanha para compatibilidade com schema novo"""
+    if campaign:
+        if "_id" in campaign:
+            campaign["_id"] = str(campaign["_id"])
+        
+        # Se tem playerId mas não tem userCharacterId, mantém ambos por compatibilidade
+        # Isso permite que campanhas antigas ainda funcionem
+        if "playerId" in campaign and "userCharacterId" not in campaign:
+            # Por enquanto, mantemos o playerId até termos um mapeamento adequado
+            campaign["userCharacterId"] = None
+    
+    return campaign
+
 async def create_campaign(user_id: str, campaign_data: dict) -> dict:
     """Cria uma nova campanha para o usuário"""
     campaign_data["userId"] = user_id
@@ -29,17 +43,12 @@ async def create_campaign(user_id: str, campaign_data: dict) -> dict:
     
     result = await campaign_collection.insert_one(campaign_data)
     new_campaign = await campaign_collection.find_one({"_id": result.inserted_id})
-    if new_campaign and "_id" in new_campaign:
-        new_campaign["_id"] = str(new_campaign["_id"])
-    return new_campaign
+    return normalize_campaign_data(new_campaign) if new_campaign else None
 
 async def get_campaigns_by_user(user_id: str) -> List[dict]:
     """Retorna todas as campanhas de um usuário"""
     campaigns = await campaign_collection.find({"userId": user_id}).to_list(length=None)
-    for campaign in campaigns:
-        if "_id" in campaign:
-            campaign["_id"] = str(campaign["_id"])
-    return campaigns
+    return [normalize_campaign_data(campaign) for campaign in campaigns]
 
 async def get_active_campaigns_by_user(user_id: str) -> List[dict]:
     """Retorna campanhas ativas de um usuário"""
@@ -47,19 +56,14 @@ async def get_active_campaigns_by_user(user_id: str) -> List[dict]:
         "userId": user_id, 
         "status": "active"
     }).to_list(length=None)
-    for campaign in campaigns:
-        if "_id" in campaign:
-            campaign["_id"] = str(campaign["_id"])
-    return campaigns
+    return [normalize_campaign_data(campaign) for campaign in campaigns]
 
 async def get_campaign_by_id(campaign_id: str) -> Optional[dict]:
     """Busca campanha por ID"""
     if not ObjectId.is_valid(campaign_id):
         return None
     campaign = await campaign_collection.find_one({"_id": ObjectId(campaign_id)})
-    if campaign and "_id" in campaign:
-        campaign["_id"] = str(campaign["_id"])
-    return campaign
+    return normalize_campaign_data(campaign) if campaign else None
 
 async def get_campaign_by_user_and_id(user_id: str, campaign_id: str) -> Optional[dict]:
     """Busca campanha por ID e verifica se pertence ao usuário"""
@@ -69,9 +73,7 @@ async def get_campaign_by_user_and_id(user_id: str, campaign_id: str) -> Optiona
         "_id": ObjectId(campaign_id),
         "userId": user_id
     })
-    if campaign and "_id" in campaign:
-        campaign["_id"] = str(campaign["_id"])
-    return campaign
+    return normalize_campaign_data(campaign) if campaign else None
 
 async def update_campaign(campaign_id: str, data_to_update: dict) -> Optional[dict]:
     """Atualiza dados da campanha"""
@@ -122,10 +124,7 @@ async def complete_campaign(campaign_id: str) -> Optional[dict]:
 async def get_campaigns_by_player(player_id: str) -> List[dict]:
     """Retorna todas as campanhas que usam um personagem específico"""
     campaigns = await campaign_collection.find({"playerId": player_id}).to_list(length=None)
-    for campaign in campaigns:
-        if "_id" in campaign:
-            campaign["_id"] = str(campaign["_id"])
-    return campaigns
+    return [normalize_campaign_data(campaign) for campaign in campaigns]
 
 async def check_user_has_active_campaign_with_player(user_id: str, player_id: str) -> bool:
     """Verifica se o usuário já tem uma campanha ativa com este personagem"""
@@ -180,8 +179,7 @@ async def get_campaign_with_details(campaign_id: str) -> Optional[dict]:
     
     if campaign:
         campaign = campaign[0]
-        if "_id" in campaign:
-            campaign["_id"] = str(campaign["_id"])
+        campaign = normalize_campaign_data(campaign)
         # Remove senha do usuário se existir
         if campaign.get("user") and "password" in campaign["user"]:
             del campaign["user"]["password"]

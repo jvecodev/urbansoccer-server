@@ -9,19 +9,19 @@ class CampaignProgress(BaseModel):
     inventory: List[str] = Field(default_factory=list)
 
 class CampaignBase(BaseModel):
-    """Schema base para campanhas, agora com descrição."""
     userId: str = Field(..., description="ID do usuário proprietário da campanha")
-    playerId: str = Field(..., description="ID do personagem escolhido")
-    campaignName: str = Field(..., max_length=100, description="Nome da campanha, gerado pela IA")
-    description: str = Field(..., description="Descrição da campanha gerada pela IA para a narração inicial")
+    userCharacterId: Optional[str] = Field(None, description="ID do personagem (user_character) escolhido para esta campanha")
+    playerId: Optional[str] = Field(None, description="ID do player (campo antigo, para compatibilidade)")
+    campaignName: str = Field(..., max_length=100)
+    description: str = Field(...)
     status: str = Field(default="active", pattern=r"^(active|completed|abandoned)$")
     progress: CampaignProgress = Field(default_factory=CampaignProgress)
 
 class CampaignCreate(BaseModel):
-    """Schema para criar uma nova campanha. Recebe os dados escolhidos pelo usuário."""
-    playerId: str = Field(..., description="ID do personagem escolhido")
-    campaignName: str = Field(..., max_length=100, description="O nome da campanha escolhida pelo usuário")
-    description: str = Field(..., description="A descrição da campanha escolhida para ser salva")
+    userCharacterId: str = Field(..., description="ID do personagem (user_character) escolhido")
+    campaignName: str = Field(..., max_length=100)
+    description: str = Field(...)
+
 
 class CampaignUpdate(BaseModel):
     """Schema para atualizações futuras na campanha."""
@@ -55,3 +55,21 @@ class CampaignWithDetails(CampaignPublic):
 
 class CampaignList(BaseModel):
     campaigns: List[CampaignPublic]
+
+class GameActionPayload(BaseModel):
+    actionId: str = Field(..., description="O ID da ação que o jogador escolheu no card")
+
+class Card(BaseModel):
+    actionId: str
+    label: str
+    description: str
+
+class GameState(BaseModel):
+    score: str
+    time: int # Representando os 'lances'
+    commentary: str
+
+class PlayResponse(BaseModel):
+    narration: str
+    availableCards: List[Card]
+    gameState: GameState

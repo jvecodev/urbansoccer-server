@@ -12,7 +12,7 @@ from urbansoccer_server.schemas.user_character_schema import (
 )
 from urbansoccer_server.core.auth import get_current_user
 
-router = APIRouter(tags=["User Characters"])
+router = APIRouter(prefix="/characters", tags=["User Characters"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserCharacterPublic)

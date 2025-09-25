@@ -10,10 +10,18 @@ app = FastAPI(
     version="0.2.0"
 )
 
+# <<< ALTERAÇÃO AQUI: Lista de origens permitidas
+# Adicione aqui os endereços do seu frontend.
+# É uma boa prática incluir tanto localhost quanto 127.0.0.1.
+origins = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+]
+
 # Configuração do CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=origins,  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,11 +33,10 @@ async def startup_event():
     """Executa a inicialização do banco quando a aplicação inicia"""
     await initialize_database()
 
-# Inclui os roteadores na aplicação principal
-app.include_router(users.router, prefix="/users")
+app.include_router(users.router)
 app.include_router(players.router)
 app.include_router(campaigns.router)
-app.include_router(user_character.router, prefix="/characters")
+app.include_router(user_character.router)
 
 @app.get("/")
 def read_root():
