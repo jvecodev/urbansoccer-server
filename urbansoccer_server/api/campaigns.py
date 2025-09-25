@@ -1,30 +1,32 @@
 # urbansoccer_server/api/campaigns.py
 from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.responses import Response # Importante: Usado para retornar o áudio
 from pydantic import BaseModel
-from urbansoccer_server.services import game_logic, game_narrator
-from urbansoccer_server.schemas.campaign_schema import GameActionPayload, PlayResponse
 
-# Imports dos seus models e schemas existentes
-from urbansoccer_server.models import campaign_model, player_model, user_character_model
+# --- Seus imports existentes ---
+from urbansoccer_server.models import campaign_model, user_character_model
 from urbansoccer_server.schemas.campaign_schema import (
     CampaignCreate, 
     CampaignPublic, 
     CampaignList, 
     CampaignUpdate,
     CampaignProgress,
-    CampaignWithDetails
+    CampaignWithDetails,
+    GameActionPayload,
+    PlayResponse # Manteremos este para o endpoint /start
 )
 from urbansoccer_server.core.auth import get_current_user
-
-# Import do novo serviço de IA que criamos
-from urbansoccer_server.services import campaign_generator
+from urbansoccer_server.services import (
+    campaign_generator,
+    game_logic,
+    game_narrator,
+    tts_provider # Importando o novo serviço de TTS
+)
 
 router = APIRouter(prefix="/campaigns", tags=["Campaigns"])
 
-# --- ROTA NOVA PARA GERAR CAMPANHAS COM IA ---
-
+# --- ROTA PARA GERAR OPÇÕES DE CAMPANHA (sem alterações) ---
 class CampaignGenerationRequest(BaseModel):
-    """Schema para o corpo da requisição da geração de campanhas."""
     user_character_id: str
 
 @router.post("/generate-options", status_code=status.HTTP_200_OK)
@@ -32,12 +34,7 @@ async def get_campaign_options(
     request: CampaignGenerationRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """
-    Gera 4 opções de campanhas iniciais usando IA, baseado no personagem do usuário.
-    """
     user_id = current_user["_id"]
-    
-    # 1. Busca o personagem do usuário para obter os detalhes do player associado
     user_char_with_player = await user_character_model.get_user_character_with_player(request.user_character_id, user_id)
 
     if not user_char_with_player or "player" not in user_char_with_player:
@@ -46,50 +43,36 @@ async def get_campaign_options(
             detail="Personagem do usuário não encontrado."
         )
 
-    # 2. Envia os detalhes do player para o serviço de IA gerar as opções
     player_details = user_char_with_player["player"]
     options = await campaign_generator.generate_campaign_options(player_details)
-
-    # 3. Retorna as opções para o frontend
     return {"options": options}
 
 
-# --- ROTAS EXISTENTES (sem alteração na lógica) ---
+# --- ROTAS DE CRUD DE CAMPANHA (sem alterações) ---
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=CampaignPublic)
 async def create_new_campaign(
     campaign: CampaignCreate, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Cria uma nova campanha para o usuário autenticado"""
     user_id = current_user["_id"]
-    
-    # --- LÓGICA ALTERADA ---
-    # 1. Verifica se o personagem customizado existe e pertence ao usuário
     character = await user_character_model.get_user_character_by_id(campaign.userCharacterId, user_id)
     if not character:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Personagem do usuário não encontrado."
         )
-
-    # 2. (Opcional, mas bom) Verifica se já existe campanha ativa para ESTE personagem
-    #    (Você precisaria criar uma nova função em campaign_model para isso, por enquanto vamos pular)
-
     campaign_dict = campaign.model_dump()
     created_campaign = await campaign_model.create_campaign(user_id, campaign_dict)
     return created_campaign
 
-
 @router.get("/", status_code=status.HTTP_200_OK, response_model=CampaignList)
 async def get_user_campaigns(current_user: dict = Depends(get_current_user)):
-    """Retorna todas as campanhas do usuário autenticado"""
     campaigns = await campaign_model.get_campaigns_by_user(current_user["_id"])
     return {"campaigns": campaigns}
 
 @router.get("/active", status_code=status.HTTP_200_OK, response_model=CampaignList)
 async def get_active_campaigns(current_user: dict = Depends(get_current_user)):
-    """Retorna campanhas ativas do usuário autenticado"""
     campaigns = await campaign_model.get_active_campaigns_by_user(current_user["_id"])
     return {"campaigns": campaigns}
 
@@ -98,18 +81,15 @@ async def get_campaign(
     campaign_id: str, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Retorna uma campanha específica do usuário"""
     campaign = await campaign_model.get_campaign_by_user_and_id(current_user["_id"], campaign_id)
     if not campaign:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Campanha não encontrada"
-        )
+        raise HTTPException(status_code=404, detail="Campanha não encontrada")
     return campaign
 
+# ... (outras rotas de CRUD como update, delete, etc. permanecem iguais)
 @router.get("/{campaign_id}/details", status_code=status.HTTP_200_OK, response_model=CampaignWithDetails)
 async def get_campaign_with_details(
-    campaign_id: str, 
+    campaign_id: str,
     current_user: dict = Depends(get_current_user)
 ):
     """Retorna campanha com detalhes do usuário e personagem"""
@@ -131,8 +111,8 @@ async def get_campaign_with_details(
 
 @router.patch("/{campaign_id}", status_code=status.HTTP_200_OK, response_model=CampaignPublic)
 async def update_campaign(
-    campaign_id: str, 
-    campaign_update: CampaignUpdate, 
+    campaign_id: str,
+    campaign_update: CampaignUpdate,
     current_user: dict = Depends(get_current_user)
 ):
     """Atualiza dados da campanha"""
@@ -157,8 +137,8 @@ async def update_campaign(
 
 @router.patch("/{campaign_id}/progress", status_code=status.HTTP_200_OK, response_model=CampaignPublic)
 async def update_campaign_progress(
-    campaign_id: str, 
-    progress: CampaignProgress, 
+    campaign_id: str,
+    progress: CampaignProgress,
     current_user: dict = Depends(get_current_user)
 ):
     """Atualiza especificamente o progresso da campanha"""
@@ -177,7 +157,7 @@ async def update_campaign_progress(
 
 @router.patch("/{campaign_id}/abandon", status_code=status.HTTP_200_OK, response_model=CampaignPublic)
 async def abandon_campaign(
-    campaign_id: str, 
+    campaign_id: str,
     current_user: dict = Depends(get_current_user)
 ):
     """Marca campanha como abandonada"""
@@ -201,7 +181,7 @@ async def abandon_campaign(
 
 @router.patch("/{campaign_id}/complete", status_code=status.HTTP_200_OK, response_model=CampaignPublic)
 async def complete_campaign(
-    campaign_id: str, 
+    campaign_id: str,
     current_user: dict = Depends(get_current_user)
 ):
     """Marca campanha como completada"""
@@ -225,7 +205,7 @@ async def complete_campaign(
 
 @router.delete("/{campaign_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_campaign(
-    campaign_id: str, 
+    campaign_id: str,
     current_user: dict = Depends(get_current_user)
 ):
     """Deleta uma campanha"""
@@ -245,33 +225,26 @@ async def delete_campaign(
             detail="Erro ao deletar campanha"
         )
 
+# --- ROTAS DE LÓGICA DO JOGO ---
+
 @router.get("/{campaign_id}/start", status_code=status.HTTP_200_OK, response_model=PlayResponse)
 async def start_game(
     campaign_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """
-    Inicia uma partida, retornando a narração inicial e o primeiro conjunto de ações.
-    """
     user_id = current_user["_id"]
     campaign = await campaign_model.get_campaign_by_user_and_id(user_id, campaign_id)
     if not campaign:
         raise HTTPException(status_code=404, detail="Campanha não encontrada.")
 
-    # 1. A narração inicial é a própria descrição da campanha
     initial_narration = campaign.get("description", "A jornada começa agora.")
-
-    # 2. Pega o primeiro conjunto de cards da nossa lógica de jogo
     initial_cards = game_logic.get_initial_cards()
-
-    # 3. Define o estado inicial do jogo
     initial_game_state = {
         "score": "0 - 0",
-        "time": 0, # Representa o "lance" inicial
+        "time": 0,
         "commentary": "A bola vai rolar!"
     }
-
-    # 4. Retorna o estado completo para o frontend
+    
     return {
         "narration": initial_narration,
         "availableCards": initial_cards,
@@ -279,51 +252,52 @@ async def start_game(
     }
 
 
-@router.post("/{campaign_id}/play", status_code=status.HTTP_200_OK, response_model=PlayResponse)
-async def play_turn(
+@router.post("/{campaign_id}/play", status_code=status.HTTP_200_OK)
+async def play_turn_and_get_audio(
     campaign_id: str,
     payload: GameActionPayload,
     current_user: dict = Depends(get_current_user)
 ):
-    """Processa uma ação do jogador e retorna a narração da IA."""
+    """
+    Processa uma ação do jogador, gera a narração em áudio e retorna o áudio.
+    """
     user_id = current_user["_id"]
     
     campaign = await campaign_model.get_campaign_by_user_and_id(user_id, campaign_id)
     if not campaign:
         raise HTTPException(status_code=404, detail="Campanha não encontrada.")
     
-    # --- CORREÇÃO PRINCIPAL AQUI ---
-    # Usar o `userCharacterId` salvo na campanha para buscar o personagem correto
     character = await user_character_model.get_user_character_with_player(campaign["userCharacterId"], user_id)
     if not character or "player" not in character:
         raise HTTPException(status_code=404, detail="Personagem associado não encontrado.")
 
     player_stats = character["player"]["stats"]
     player_name = character["characterName"]
-
-    # ... (o resto da função /play continua exatamente igual)
-    outcome_text, next_cards = game_logic.process_player_action(player_stats, payload.actionId)
+    
+    outcome_text, _ = game_logic.process_player_action(player_stats, payload.actionId)
 
     score = campaign.get("progress", {}).get("score", 0)
     if "GOL!" in outcome_text:
         score += 1
-    
-    current_time = campaign.get("progress", {}).get("time", 0) + 1
-    
+
     narration_event = {
         "player_name": player_name,
         "action_description": payload.actionId.replace('_', ' '),
         "outcome": outcome_text,
         "score": f"Jogador {score} - 0 Adversário"
     }
+    
+    # 1. Gera o texto da narração
     narration_text = await game_narrator.narrate_event(narration_event)
+    
+    # 2. Gera o áudio a partir do texto
+    audio_content = await tts_provider.generate_audio_from_text(narration_text)
 
-    return {
-        "narration": narration_text,
-        "availableCards": next_cards,
-        "gameState": {
-            "score": f"Jogador {score} - 0 Adversário",
-            "time": current_time,
-            "commentary": outcome_text
-        }
-    }
+    if not audio_content:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Não foi possível gerar o áudio da narração."
+        )
+
+    # 3. Retorna o conteúdo de áudio diretamente
+    return Response(content=audio_content, media_type="audio/wav")

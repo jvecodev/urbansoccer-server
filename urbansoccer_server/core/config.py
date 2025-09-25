@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     OLLAMA_BASE_URL: str
+    COQUI_TTS_URL: str 
 
     model_config = SettingsConfigDict(
         env_file=".env",
