@@ -1,7 +1,6 @@
 import json
 from typing import List, Dict
 from . import llm_provider, prompt_templates
-
 async def generate_campaign_options(player_info: Dict) -> List[Dict]:
     prompt = prompt_templates.GENERATE_CAMPAIGNS_PROMPT.format(
         player_name=player_info.get("name"),
@@ -9,7 +8,8 @@ async def generate_campaign_options(player_info: Dict) -> List[Dict]:
         player_special_ability=player_info.get("stats", {}).get("specialAbility")
     )
 
-    llm_response_text = await llm_provider.generate_with_ollama(prompt)
+    # --- ALTERAÇÃO AQUI ---
+    llm_response_text = await llm_provider.generate_with_fallback(prompt)
 
     try:
         response_json = json.loads(llm_response_text)

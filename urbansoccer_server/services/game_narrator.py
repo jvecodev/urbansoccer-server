@@ -16,13 +16,10 @@ async def narrate_event(event_data: Dict) -> str:
         score=event_data.get("score", "o placar está indefinido")
     )
 
-    llm_response_text = await llm_provider.generate_with_ollama(prompt)
+    llm_response_text = await llm_provider.generate_with_fallback(prompt)
 
     try:
-        # A resposta da IA para narração não precisa ser um JSON complexo
-        # Estamos esperando um texto simples, mas o prompt pede JSON para consistência.
         response_json = json.loads(llm_response_text)
         return response_json.get("narration", "A jogada continua...")
     except (json.JSONDecodeError, AttributeError):
-        # Fallback se a IA não retornar o JSON esperado
         return "O juiz apita, a bola rola e a partida continua emocionante!"
