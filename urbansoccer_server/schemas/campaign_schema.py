@@ -2,11 +2,21 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
+
+class Card(BaseModel):
+    actionId: str
+    label: str
+    description: str
+
 class CampaignProgress(BaseModel):
     level: int = Field(default=1, ge=1)
     score: int = Field(default=0, ge=0)
+    opponent_score: int = Field(default=0, ge=0)
+    time: int = Field(default=0, description="Representa o 'lance' atual do jogo") 
     currentMission: str = Field(default="Primeira Missão")
     inventory: List[str] = Field(default_factory=list)
+    availableCards: List[Card] = Field(default_factory=list) 
+    gameContext: str = Field(default="meio_campo", description="Situação atual da partida") # Adicionado
 
 class CampaignBase(BaseModel):
     userId: str = Field(..., description="ID do usuário proprietário da campanha")
@@ -58,11 +68,6 @@ class CampaignList(BaseModel):
 
 class GameActionPayload(BaseModel):
     actionId: str = Field(..., description="O ID da ação que o jogador escolheu no card")
-
-class Card(BaseModel):
-    actionId: str
-    label: str
-    description: str
 
 class GameState(BaseModel):
     score: str

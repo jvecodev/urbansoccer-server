@@ -21,7 +21,6 @@ from urbansoccer_server.services import campaign_generator
 
 router = APIRouter(prefix="/campaigns", tags=["Campaigns"])
 
-# --- ROTA NOVA PARA GERAR CAMPANHAS COM IA ---
 
 class CampaignGenerationRequest(BaseModel):
     """Schema para o corpo da requisição da geração de campanhas."""
@@ -64,7 +63,6 @@ async def create_new_campaign(
     """Cria uma nova campanha para o usuário autenticado"""
     user_id = current_user["_id"]
     
-    # --- LÓGICA ALTERADA ---
     # 1. Verifica se o personagem customizado existe e pertence ao usuário
     character = await user_character_model.get_user_character_by_id(campaign.userCharacterId, user_id)
     if not character:
@@ -73,8 +71,7 @@ async def create_new_campaign(
             detail="Personagem do usuário não encontrado."
         )
 
-    # 2. (Opcional, mas bom) Verifica se já existe campanha ativa para ESTE personagem
-    #    (Você precisaria criar uma nova função em campaign_model para isso, por enquanto vamos pular)
+
 
     campaign_dict = campaign.model_dump()
     created_campaign = await campaign_model.create_campaign(user_id, campaign_dict)
@@ -292,8 +289,6 @@ async def play_turn(
     if not campaign:
         raise HTTPException(status_code=404, detail="Campanha não encontrada.")
     
-    # --- CORREÇÃO PRINCIPAL AQUI ---
-    # Usar o `userCharacterId` salvo na campanha para buscar o personagem correto
     character = await user_character_model.get_user_character_with_player(campaign["userCharacterId"], user_id)
     if not character or "player" not in character:
         raise HTTPException(status_code=404, detail="Personagem associado não encontrado.")
@@ -301,20 +296,69 @@ async def play_turn(
     player_stats = character["player"]["stats"]
     player_name = character["characterName"]
 
-    # ... (o resto da função /play continua exatamente igual)
-    outcome_text, next_cards = game_logic.process_player_action(player_stats, payload.actionId)
+    progress = CampaignProgress(**campaign.get("progress", {}))
+    current_game_context = progress.gameContext
 
-    score = campaign.get("progress", {}).get("score", 0)
-    if "GOL!" in outcome_text:
-        score += 1
+    outcome_text, new_game_context, next_cards, opponent_scored = game_logic.process_player_action(
+        player_stats, payload.actionId, current_game_context
+    )
     
-    current_time = campaign.get("progress", {}).get("time", 0) + 1
+    if "GOL!" in outcome_text:
+        progress.score += 1
+    
+    if opponent_scored:
+        progress.opponent_score += 1
+        
+    progress.time += 1
+    progress.availableCards = next_cards
+    progress.gameContext = new_game_context 
+    
+    game_over = False
+    final_narration = ""
+    
+    if progress.score >= 3:
+        await campaign_model.complete_campaign(campaign_id)
+        game_over = True
+        final_narration = f"VITÓRIA! Com {progress.score} gols, você é a lenda das ruas! Placar final: {progress.score} a {progress.opponent_score}."
+        next_cards = []
+    elif progress.opponent_score >= 3:
+        await campaign_model.abandon_campaign(campaign_id) 
+        game_over = True
+        final_narration = f"FIM DE JOGO! O adversário foi melhor hoje. Placar final: {progress.score} a {progress.opponent_score}."
+        next_cards = []
+    elif progress.time >= 10:
+        await campaign_model.complete_campaign(campaign_id) if progress.score >= progress.opponent_score else await campaign_model.abandon_campaign(campaign_id)
+        game_over = True
+        if progress.score > progress.opponent_score:
+             final_narration = f"FIM DE JOGO! Você venceu por {progress.score} a {progress.opponent_score}!"
+        elif progress.score < progress.opponent_score:
+            final_narration = f"FIM DE JOGO! Você foi derrotado por {progress.score} a {progress.opponent_score}."
+        else:
+            final_narration = f"EMPATE! O jogo termina com o placar de {progress.score} a {progress.opponent_score}."
+        next_cards = []
+
+    await campaign_model.update_campaign_progress(campaign_id, progress.model_dump())
+
+    if game_over:
+        return {
+            "narration": final_narration,
+            "availableCards": [],
+            "gameState": {
+                "score": f"Jogador {progress.score} - {progress.opponent_score} Adversário",
+                "time": progress.time,
+                "commentary": "Partida Finalizada!"
+            }
+        }
+    
+    previous_outcome_text = campaign.get("progress", {}).get("commentary", "O jogo começa.")
     
     narration_event = {
+        "game_context": new_game_context,
+        "previous_outcome": previous_outcome_text,
         "player_name": player_name,
-        "action_description": payload.actionId.replace('_', ' '),
+        "action_description": f"ação {payload.actionId}",
         "outcome": outcome_text,
-        "score": f"Jogador {score} - 0 Adversário"
+        "score": f"Jogador {progress.score} - {progress.opponent_score} Adversário"
     }
     narration_text = await game_narrator.narrate_event(narration_event)
 
@@ -322,8 +366,39 @@ async def play_turn(
         "narration": narration_text,
         "availableCards": next_cards,
         "gameState": {
-            "score": f"Jogador {score} - 0 Adversário",
-            "time": current_time,
+            "score": f"Jogador {progress.score} - {progress.opponent_score} Adversário",
+            "time": progress.time,
             "commentary": outcome_text
         }
+    }
+@router.get("/{campaign_id}/resume", status_code=status.HTTP_200_OK, response_model=PlayResponse)
+async def resume_game(
+    campaign_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Retoma uma partida, retornando a última narração e o conjunto de ações salvas.
+    """
+    user_id = current_user["_id"]
+    campaign = await campaign_model.get_campaign_by_user_and_id(user_id, campaign_id)
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campanha não encontrada.")
+
+    if campaign["status"] != "active":
+        raise HTTPException(status_code=400, detail="Esta campanha não está ativa.")
+        
+    progress = CampaignProgress(**campaign.get("progress", {}))
+
+    # Monta o estado do jogo a partir do progresso salvo
+    game_state = {
+        "score": f"Jogador {progress.score} - {progress.opponent_score} Adversário",
+        "time": progress.time,
+        "commentary": "A partida continua!"
+    }
+
+    # Retorna o estado completo para o frontend
+    return {
+        "narration": "Bem-vindo de volta! O jogo continua de onde você parou.",
+        "availableCards": progress.availableCards,
+        "gameState": game_state
     }

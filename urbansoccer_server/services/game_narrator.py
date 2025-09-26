@@ -8,6 +8,8 @@ async def narrate_event(event_data: Dict) -> str:
     Usa o LLM para gerar a narração de um evento do jogo.
     """
     prompt = prompt_templates.NARRATE_GAME_EVENT_PROMPT.format(
+        game_context=event_data.get("game_context", "partida equilibrada"),
+        previous_outcome=event_data.get("previous_outcome", "o jogo começou"),
         player_name=event_data.get("player_name", "o jogador"),
         action_description=event_data.get("action_description", "uma ação incrível"),
         outcome=event_data.get("outcome", "algo aconteceu"),
