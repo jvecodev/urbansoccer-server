@@ -14,7 +14,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Adicionamos 'requests' à lista
-RUN pip install fastapi[standard] motor pydantic-settings python-jose[cryptography] passlib[bcrypt] python-multipart email-validator google-generativeai requests
+RUN pip install fastapi[standard] motor pydantic-settings python-jose[cryptography] passlib[bcrypt] python-multipart email-validator google-generativeai requests elevenlabs
 
 # Copia o código da aplicação
 COPY ./urbansoccer_server ./urbansoccer_server

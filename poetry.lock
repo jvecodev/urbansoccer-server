@@ -454,6 +454,29 @@ gmpy = ["gmpy"]
 gmpy2 = ["gmpy2"]
 
 [[package]]
+name = "elevenlabs"
+version = "2.16.0"
+description = ""
+optional = false
+python-versions = "<4.0,>=3.8"
+groups = ["main"]
+files = [
+    {file = "elevenlabs-2.16.0-py3-none-any.whl", hash = "sha256:ba46cb8029c11f3fff5c8e083f5857a90adf0aa463bbd4cf01f5511017940d58"},
+    {file = "elevenlabs-2.16.0.tar.gz", hash = "sha256:3a26ea20a3ce4a30ffada125f77b102bd88dc2d3230a912bd144017087d36795"},
+]
+
+[package.dependencies]
+httpx = ">=0.21.2"
+pydantic = ">=1.9.2"
+pydantic-core = ">=2.18.2"
+requests = ">=2.20"
+typing_extensions = ">=4.0.0"
+websockets = ">=11.0"
+
+[package.extras]
+pyaudio = ["pyaudio (>=0.2.14)"]
+
+[[package]]
 name = "email-validator"
 version = "2.2.0"
 description = "A robust email address syntax and deliverability validation library."
@@ -2255,4 +2278,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "50224cb041dfc2d16dd5f6029e9a80ce8ac77bc08f389715dff365e91ada2993"
+content-hash = "a5472a5bd0f77cc512952d40dca7939af7c2a4159be0c969407ed507b5c1f622"

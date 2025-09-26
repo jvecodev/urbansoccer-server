@@ -15,6 +15,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       # Adicionamos a URL do Ollama para o container da API saber onde ele está
       OLLAMA_BASE_URL: http://ollama:11434
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
     depends_on:
       mongo:
         condition: service_healthy
