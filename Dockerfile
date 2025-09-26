@@ -13,8 +13,8 @@ RUN pip install poetry
 FROM python:3.12-slim
 WORKDIR /app
 
-# Adicionamos 'requests' à lista
-RUN pip install fastapi[standard] motor pydantic-settings python-jose[cryptography] passlib[bcrypt] python-multipart email-validator google-generativeai requests elevenlabs
+# Instalar dependências com versões específicas para resolver problemas de compatibilidade
+RUN pip install fastapi[standard] motor pydantic-settings python-jose[cryptography] python-multipart email-validator google-generativeai requests elevenlabs bcrypt==4.0.1 passlib[bcrypt]==1.7.4
 
 # Copia o código da aplicação
 COPY ./urbansoccer_server ./urbansoccer_server

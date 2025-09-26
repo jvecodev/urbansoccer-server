@@ -16,10 +16,14 @@ user_collection = db["users"]
 
 def hash_password(password: str) -> str:
     """Gera hash da senha"""
+    if len(password.encode('utf-8')) > 72:
+        password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica se a senha está correta"""
+    if len(plain_password.encode('utf-8')) > 72:
+        plain_password = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.verify(plain_password, hashed_password)
 
 async def create_user(user_data: dict) -> dict:
@@ -27,7 +31,6 @@ async def create_user(user_data: dict) -> dict:
     user_data["password"] = hash_password(user_data["password"])
     result = await user_collection.insert_one(user_data)
     new_user = await user_collection.find_one({"_id": result.inserted_id})
-    # Remove a senha do retorno e converte _id para string
     if new_user and "password" in new_user:
         del new_user["password"]
     if new_user and "_id" in new_user:
@@ -37,7 +40,6 @@ async def create_user(user_data: dict) -> dict:
 async def get_all_users() -> List[dict]:
     """Retorna todos os usuários sem as senhas"""
     users = await user_collection.find({}, {"password": 0}).to_list(length=None)
-    # Converte _id para string em todos os usuários
     for user in users:
         if "_id" in user:
             user["_id"] = str(user["_id"])
@@ -66,7 +68,6 @@ async def authenticate_user(email: str, password: str) -> Optional[dict]:
         return None
     if not verify_password(password, user["password"]):
         return None
-    # Remove a senha do retorno
     del user["password"]
     return user
 
