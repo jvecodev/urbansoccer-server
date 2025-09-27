@@ -43,7 +43,7 @@ class CampaignPublic(CampaignBase):
     """Schema público que será retornado pela API."""
     id: str = Field(..., alias="_id")
     startDate: datetime
-    lastPlayedDate: datetime
+    lastPlayedDate: Optional[datetime] = None
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -69,10 +69,12 @@ class CampaignList(BaseModel):
 class GameActionPayload(BaseModel):
     actionId: str = Field(..., description="O ID da ação que o jogador escolheu no card")
 
+
 class GameState(BaseModel):
     score: str
     time: int # Representando os 'lances'
     commentary: str
+    gameContext: str = Field(default="meio_campo", description="A situação atual no campo") # <-- ADICIONE ESTA LINHA
 
 class PlayResponse(BaseModel):
     narration: str

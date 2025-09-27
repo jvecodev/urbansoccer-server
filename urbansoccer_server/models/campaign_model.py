@@ -22,6 +22,10 @@ def normalize_campaign_data(campaign: dict) -> dict:
         if "playerId" in campaign and "userCharacterId" not in campaign:
             # Por enquanto, mantemos o playerId até termos um mapeamento adequado
             campaign["userCharacterId"] = None
+        
+        # Garante que lastPlayedDate existe (para campanhas antigas)
+        if "lastPlayedDate" not in campaign:
+            campaign["lastPlayedDate"] = campaign.get("startDate")
     
     return campaign
 
@@ -186,3 +190,37 @@ async def get_campaign_with_details(campaign_id: str) -> Optional[dict]:
         return campaign
     
     return None
+
+
+async def reset_campaign(campaign_id: str) -> Optional[dict]:
+    """
+    Reseta o progresso de uma campanha para seu estado inicial.
+    """
+    if not ObjectId.is_valid(campaign_id):
+        return None
+
+    default_progress = {
+        "level": 1,
+        "score": 0,
+        "opponent_score": 0,
+        "time": 0,
+        "currentMission": "Primeira Missão",
+        "inventory": [],
+        "availableCards": [], # Limpa os cards
+        "gameContext": "meio_campo" # Retorna ao início
+    }
+
+    
+    await campaign_collection.update_one(
+        {"_id": ObjectId(campaign_id)},
+        {
+            "$set": {
+                "status": "active",
+                "progress": default_progress,
+                "lastPlayedDate": datetime.utcnow()
+            }
+        }
+    )
+
+    # Retorna a campanha atualizada para confirmar
+    return await get_campaign_by_id(campaign_id)

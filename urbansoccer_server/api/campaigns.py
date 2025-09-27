@@ -264,8 +264,9 @@ async def start_game(
     # 3. Define o estado inicial do jogo
     initial_game_state = {
         "score": "0 - 0",
-        "time": 0, # Representa o "lance" inicial
-        "commentary": "A bola vai rolar!"
+        "time": 0,
+        "commentary": "A bola vai rolar!",
+        "gameContext": "meio_campo"  # <-- ADICIONE AQUI
     }
 
     # 4. Retorna o estado completo para o frontend
@@ -346,7 +347,8 @@ async def play_turn(
             "gameState": {
                 "score": f"Jogador {progress.score} - {progress.opponent_score} Adversário",
                 "time": progress.time,
-                "commentary": "Partida Finalizada!"
+                "commentary": "Partida Finalizada!",
+                "gameContext": "fim_de_jogo"
             }
         }
     
@@ -368,9 +370,41 @@ async def play_turn(
         "gameState": {
             "score": f"Jogador {progress.score} - {progress.opponent_score} Adversário",
             "time": progress.time,
-            "commentary": outcome_text
+            "commentary": outcome_text,
+            "gameContext": new_game_context
         }
     }
+
+@router.post("/{campaign_id}/reset", status_code=status.HTTP_200_OK, response_model=CampaignPublic)
+async def reset_campaign_progress(
+    campaign_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Reseta o progresso de uma campanha para o estado inicial.
+    Útil para quando o jogador 'sai sem salvar'.
+    """
+    # Valida se a campanha pertence ao usuário
+    existing_campaign = await campaign_model.get_campaign_by_user_and_id(
+        current_user["_id"], campaign_id
+    )
+    if not existing_campaign:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Campanha não encontrada"
+        )
+
+    # Chama a nova função no model para fazer o reset
+    updated_campaign = await campaign_model.reset_campaign(campaign_id)
+
+    if not updated_campaign:
+         raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Não foi possível resetar a campanha."
+        )
+
+    return updated_campaign
+
 @router.get("/{campaign_id}/resume", status_code=status.HTTP_200_OK, response_model=PlayResponse)
 async def resume_game(
     campaign_id: str,
@@ -393,7 +427,8 @@ async def resume_game(
     game_state = {
         "score": f"Jogador {progress.score} - {progress.opponent_score} Adversário",
         "time": progress.time,
-        "commentary": "A partida continua!"
+        "commentary": "A partida continua!",
+        "gameContext": progress.gameContext
     }
 
     # Retorna o estado completo para o frontend
