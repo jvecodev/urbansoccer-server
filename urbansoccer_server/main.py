@@ -1,7 +1,7 @@
 # urbansoccer_server/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from urbansoccer_server.api import users, players, campaigns, user_character, narration
+from urbansoccer_server.api import users, players, campaigns, user_character, narration, faq
 from urbansoccer_server.core.database_init import initialize_database
 
 app = FastAPI(
@@ -36,6 +36,7 @@ app.include_router(players.router)
 app.include_router(campaigns.router)
 app.include_router(user_character.router)
 app.include_router(narration.router)
+app.include_router(faq.router)
 
 @app.get("/")
 def read_root():
