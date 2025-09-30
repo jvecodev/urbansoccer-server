@@ -47,3 +47,12 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if "password" in user:
         del user["password"]
     return user
+
+
+def create_refresh_token(data: dict):
+    """Cria um refresh token JWT com validade longa."""
+    expires = datetime.utcnow() + timedelta(days=7) 
+    to_encode = data.copy()
+    to_encode.update({"exp": expires})
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt

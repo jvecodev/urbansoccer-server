@@ -1,11 +1,28 @@
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from urbansoccer_server.services import faq_service
 from urbansoccer_server.schemas.faq_schema import FAQRequest, FAQLogList
 from urbansoccer_server.models import faq_log_model
-from urbansoccer_server.core.auth import get_current_user 
+from urbansoccer_server.core.auth import get_current_user
+import logging
+
+logger = logging.getLogger(__name__) 
 
 router = APIRouter(prefix="/faq", tags=["FAQ"])
+
+async def _save_faq_log_with_logging(question: str, user_id: str):
+    """
+    Função auxiliar para salvar FAQ log com logging adequado.
+    """
+    try:
+        logger.info(f"Tentando salvar FAQ log para usuário {user_id}")
+        result = await faq_log_model.create_faq_log(question, user_id)
+        if result:
+            logger.info(f"FAQ log salvo com sucesso: {result}")
+        else:
+            logger.error("Falha ao salvar FAQ log - resultado None")
+    except Exception as e:
+        logger.error(f"Erro crítico ao salvar FAQ log: {e}")
 
 @router.post("/ask/stream", response_class=StreamingResponse)
 async def stream_faq_answer(
@@ -18,11 +35,18 @@ async def stream_faq_answer(
     e retorna a resposta da LLM em tempo real (streaming).
     """
     user_id = current_user["_id"]
-    background_tasks.add_task(faq_log_model.create_faq_log, request.question, user_id)
+    
+    background_tasks.add_task(_save_faq_log_with_logging, request.question, user_id)
 
     return StreamingResponse(
         faq_service.ask_faq_stream(request.question),
-        media_type="text/event-stream"
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*"
+        }
     )
 
 @router.get("/my-history", response_model=FAQLogList)
@@ -31,5 +55,12 @@ async def get_my_faq_history(current_user: dict = Depends(get_current_user)):
     Retorna as 10 perguntas mais recentes feitas pelo usuário logado.
     """
     user_id = current_user["_id"]
-    recent_logs = await faq_log_model.get_recent_faq_logs_by_user(user_id=user_id, limit=10)
-    return {"logs": recent_logs}
+    
+    try:
+        recent_logs = await faq_log_model.get_recent_faq_logs_by_user(user_id=user_id, limit=10)
+        return {"logs": recent_logs}
+    except Exception as e:
+        logger.error(f"Erro ao buscar histórico FAQ para usuário {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao buscar histórico")
+
+

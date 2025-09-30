@@ -1,6 +1,8 @@
 # urbansoccer_server/api/users.py
 from datetime import timedelta
 from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import JWTError, jwt
 from urbansoccer_server.models import user_model
 from urbansoccer_server.schemas.user_schema import (
     UserCreate, 
@@ -10,15 +12,17 @@ from urbansoccer_server.schemas.user_schema import (
     UserLogin, 
     Token
 )
-from urbansoccer_server.core.auth import create_access_token, get_current_user
+from urbansoccer_server.core.auth import create_access_token, get_current_user, create_refresh_token
 from urbansoccer_server.core.config import settings
+
+# Esquema de segurança para refresh token
+security = HTTPBearer()
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserPublic)
 async def register_user(user: UserCreate):
     """Registra um novo usuário"""
-    # Verifica se o email já existe
     existing_user = await user_model.get_user_by_email(user.email)
     if existing_user:
         raise HTTPException(
@@ -48,7 +52,15 @@ async def login_user(user_credentials: UserLogin):
     access_token = create_access_token(
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "name": user["name"]}
+
+    refresh_token = create_refresh_token(data={"sub": user["email"]})
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,  
+        "token_type": "bearer",
+        "name": user["name"]
+    }
 
 @router.get("/me", status_code=status.HTTP_200_OK, response_model=UserPublic)
 async def get_current_user_profile(current_user: dict = Depends(get_current_user)):
@@ -106,3 +118,38 @@ async def delete_existing_user(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="Usuário não encontrado"
         )
+@router.post("/refresh-token", response_model=Token)
+async def refresh_access_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Recebe um refresh token e retorna um novo conjunto de tokens.
+    """
+    refresh_token = credentials.credentials
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Não foi possível validar o refresh token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = await user_model.get_user_by_email(email=email)
+    if user is None:
+        raise credentials_exception
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    new_access_token = create_access_token(
+        data={"sub": user["email"]}, expires_delta=access_token_expires
+    )
+    new_refresh_token = create_refresh_token(data={"sub": user["email"]})
+
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer"
+    }
