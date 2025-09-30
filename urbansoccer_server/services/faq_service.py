@@ -1,6 +1,12 @@
+# urbansoccer_server/services/faq_service.py
 from . import llm_provider
+import logging
+from collections.abc import AsyncGenerator
 
-FAQ_CONTEXT_PROMPT = """
+logger = logging.getLogger(__name__)
+
+# O CONTEXTO DO PROMPT CONTINUA O MESMO
+FAQ_CONTEXT_PROMPT_TEMPLATE = """
 Você é o "Mestre da Várzea", um assistente especialista e carismático do jogo de RPG de texto "Urban Soccer". Sua missão é guiar os novos jogadores, respondendo a perguntas sobre o universo do jogo, regras, personagens e funcionalidades. Use APENAS as informações fornecidas neste contexto. Se a pergunta for sobre qualquer outro assunto fora do jogo, recuse educadamente, dizendo que seu único foco é o futebol de rua.
 
 --- CONTEXTO DO JOGO URBAN SOCCER ---
@@ -41,31 +47,27 @@ Com base estritamente no contexto acima, responda à seguinte pergunta do jogado
 Pergunta: "{user_question}"
 """
 
-async def ask_faq_stream(question: str):
+async def ask_faq_stream(question: str) -> AsyncGenerator[str, None]:
     """
-    Monta o prompt do FAQ e chama o provedor de LLM.
-    Simula streaming quebrando a resposta em chunks.
+    Monta o prompt do FAQ no formato de mensagens e chama o provedor de LLM
+    para obter uma resposta em streaming real.
     """
-    full_prompt = FAQ_CONTEXT_PROMPT.format(user_question=question)
+    # Formata o prompt final com a pergunta do usuário
+    full_prompt = FAQ_CONTEXT_PROMPT_TEMPLATE.format(user_question=question)
+
+    # Converte o prompt para o formato de mensagens que o llm_provider espera
+    messages = [
+        # Nota: O system prompt já está embutido no nosso template,
+        # então só precisamos da mensagem do usuário.
+        {"role": "user", "content": full_prompt}
+    ]
     
     try:
-        # Gera a resposta completa
-        response = await llm_provider.generate_with_fallback(full_prompt)
-        
-        # Simula streaming enviando a resposta em chunks
-        words = response.split()
-        chunk_size = 3  # Envia 3 palavras por vez
-        
-        for i in range(0, len(words), chunk_size):
-            chunk = " ".join(words[i:i+chunk_size])
-            if i + chunk_size < len(words):
-                chunk += " "
-            yield chunk
-            
-            # Pequena pausa para simular streaming real
-            import asyncio
-            await asyncio.sleep(0.1)
+        # Chama a função de streaming com fallback do nosso provedor
+        logger.info(f"Iniciando stream de FAQ para a pergunta: '{question}'")
+        async for token in llm_provider.stream_with_fallback(messages):
+            yield token
             
     except Exception as e:
-        error_message = f"Desculpe, ocorreu um erro ao processar sua pergunta: {str(e)}"
-        yield error_message
+        logger.error(f"Erro crítico durante o stream do FAQ: {e}")
+        yield "Desculpe, Mestre da Várzea está ocupado no momento. Tente novamente mais tarde."

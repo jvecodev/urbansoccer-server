@@ -12,10 +12,9 @@ from urbansoccer_server.schemas.user_schema import (
     UserLogin, 
     Token
 )
-from urbansoccer_server.core.auth import create_access_token, get_current_user, create_refresh_token
+from urbansoccer_server.core.auth import create_access_token, get_current_user
 from urbansoccer_server.core.config import settings
 
-# Esquema de segurança para refresh token
 security = HTTPBearer()
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -53,11 +52,9 @@ async def login_user(user_credentials: UserLogin):
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )
 
-    refresh_token = create_refresh_token(data={"sub": user["email"]})
 
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token,  
         "token_type": "bearer",
         "name": user["name"]
     }
@@ -118,38 +115,3 @@ async def delete_existing_user(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="Usuário não encontrado"
         )
-@router.post("/refresh-token", response_model=Token)
-async def refresh_access_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """
-    Recebe um refresh token e retorna um novo conjunto de tokens.
-    """
-    refresh_token = credentials.credentials
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Não foi possível validar o refresh token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    
-    try:
-        payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    
-    user = await user_model.get_user_by_email(email=email)
-    if user is None:
-        raise credentials_exception
-    
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    new_access_token = create_access_token(
-        data={"sub": user["email"]}, expires_delta=access_token_expires
-    )
-    new_refresh_token = create_refresh_token(data={"sub": user["email"]})
-
-    return {
-        "access_token": new_access_token,
-        "refresh_token": new_refresh_token,
-        "token_type": "bearer"
-    }
