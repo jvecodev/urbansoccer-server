@@ -8,7 +8,7 @@ from urbansoccer_server.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-GOOGLE_AISTUDIO_MODELS = ["gemini-1.5-flash"]
+GOOGLE_AISTUDIO_MODELS = ["gemini-2.5-flash"]
 CEREBRAS_MODELS = ["llama3.1-8b", "llama3.1-70b"] 
 GROQ_MODELS = ["llama3-70b-8192"]
 
