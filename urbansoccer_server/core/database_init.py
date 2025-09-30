@@ -69,12 +69,15 @@ async def initialize_database():
         user_collection = db["users"] 
         campaign_collection = db["campaigns"]
         user_character_collection = db["user_characters"]
+        faq_log_collection = db["faq_logs"]
 
         try:
             # Índices
             await user_collection.create_index("email", unique=True)
             await campaign_collection.create_index([("userId", 1)])
             await user_character_collection.create_index([("userId", 1), ("characterName", 1)], unique=True)
+            await faq_log_collection.create_index([("userId", 1), ("timestamp", -1)])  # Para buscar por usuário e ordenar por data
+            await faq_log_collection.create_index([("timestamp", -1)])  # Para buscar por data
             logger.info("✅ Índices criados com sucesso.")
         except Exception as e:
             logger.info(f"⚠️ Índices já existem ou erro: {e}")

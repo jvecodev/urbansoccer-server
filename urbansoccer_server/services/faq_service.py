@@ -43,10 +43,29 @@ Pergunta: "{user_question}"
 
 async def ask_faq_stream(question: str):
     """
-    Monta o prompt do FAQ e chama o provedor de LLM em modo streaming.
+    Monta o prompt do FAQ e chama o provedor de LLM.
+    Simula streaming quebrando a resposta em chunks.
     """
     full_prompt = FAQ_CONTEXT_PROMPT.format(user_question=question)
     
-    # Usa a função de fallback de streaming
-    async for token in llm_provider.stream_with_fallback(full_prompt):
-        yield token
+    try:
+        # Gera a resposta completa
+        response = await llm_provider.generate_with_fallback(full_prompt)
+        
+        # Simula streaming enviando a resposta em chunks
+        words = response.split()
+        chunk_size = 3  # Envia 3 palavras por vez
+        
+        for i in range(0, len(words), chunk_size):
+            chunk = " ".join(words[i:i+chunk_size])
+            if i + chunk_size < len(words):
+                chunk += " "
+            yield chunk
+            
+            # Pequena pausa para simular streaming real
+            import asyncio
+            await asyncio.sleep(0.1)
+            
+    except Exception as e:
+        error_message = f"Desculpe, ocorreu um erro ao processar sua pergunta: {str(e)}"
+        yield error_message
