@@ -78,26 +78,21 @@ async def initialize_database():
             await user_character_collection.create_index([("userId", 1), ("characterName", 1)], unique=True)
             await faq_log_collection.create_index([("userId", 1), ("timestamp", -1)])  # Para buscar por usuário e ordenar por data
             await faq_log_collection.create_index([("timestamp", -1)])  # Para buscar por data
-            logger.info("✅ Índices criados com sucesso.")
         except Exception as e:
             logger.info(f"⚠️ Índices já existem ou erro: {e}")
         
-        # Verificar e criar players
         if await player_collection.count_documents({}) == 0:
-            logger.info("Criando players padrão...")
             for player in DEFAULT_PLAYERS:
                 player["createdAt"] = datetime.utcnow()
             await player_collection.insert_many(DEFAULT_PLAYERS)
         
         # Verificar e criar usuário admin
         if not await user_collection.find_one({"email": DEFAULT_ADMIN_USER["email"]}):
-            logger.info("Criando usuário admin padrão...")
             admin_user = DEFAULT_ADMIN_USER.copy()
             admin_user["createdAt"] = datetime.utcnow()
             # O hash da senha já está no objeto
             await user_collection.insert_one(admin_user)
 
-        logger.info("🚀 Inicialização do banco de dados concluída.")
         await client.close()
         
     except Exception as e:

@@ -9,7 +9,6 @@ client = None
 if settings.ELEVENLABS_API_KEY:
     try:
         client = ElevenLabs(api_key=settings.ELEVENLABS_API_KEY)
-        logger.info("✅ Cliente da ElevenLabs conectado com sucesso.")
     except Exception as e:
         logger.error(f"❌ Falha ao conectar com a ElevenLabs: {e}")
 

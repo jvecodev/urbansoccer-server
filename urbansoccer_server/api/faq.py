@@ -15,7 +15,6 @@ async def _save_faq_log_with_logging(question: str, user_id: str):
     Função auxiliar para salvar FAQ log com logging adequado.
     """
     try:
-        logger.info(f"Tentando salvar FAQ log para usuário {user_id}")
         result = await faq_log_model.create_faq_log(question, user_id)
         if result:
             logger.info(f"FAQ log salvo com sucesso: {result}")
@@ -63,4 +62,34 @@ async def get_my_faq_history(current_user: dict = Depends(get_current_user)):
         logger.error(f"Erro ao buscar histórico FAQ para usuário {user_id}: {e}")
         raise HTTPException(status_code=500, detail="Erro interno ao buscar histórico")
 
+@router.delete("/{log_id}")
+async def delete_faq_question(
+    log_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Deleta uma pergunta específica do histórico do usuário logado.
+    """
+    user_id = current_user["_id"]
+    
+    try:
+        success = await faq_log_model.delete_faq_log(log_id=log_id, user_id=user_id)
+        
+        if success:
+            return {"message": "Pergunta deletada com sucesso", "deleted_id": log_id}
+        else:
+            logger.warning(f"Tentativa falhou de deletar pergunta {log_id} pelo usuário {user_id}")
+            raise HTTPException(
+                status_code=404, 
+                detail="Pergunta não encontrada ou você não tem permissão para deletá-la"
+            )
+            
+    except HTTPException:
+        raise  # Re-raise HTTPException para manter o status code
+    except Exception as e:
+        logger.error(f"Erro interno ao deletar pergunta {log_id} para usuário {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao deletar pergunta")
 
+
+
+    
