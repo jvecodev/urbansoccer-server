@@ -59,6 +59,88 @@ Com base estritamente no contexto acima, responda à seguinte pergunta do jogado
 Pergunta: "{user_question}"
 """
 
+async def ask_faq_stream_and_collect(question: str, log_id: str = None) -> AsyncGenerator[str, None]:
+    """
+    Monta o prompt do FAQ no formato de mensagens e chama o provedor de LLM
+    para obter uma resposta em streaming real, coletando a resposta completa.
+    Se log_id for fornecido, atualiza o log com a resposta completa ao final.
+    """
+    from ..models import faq_log_model
+    
+    # Formata o prompt final com a pergunta do usuário
+    full_prompt = FAQ_CONTEXT_PROMPT_TEMPLATE.format(user_question=question)
+
+    # Converte o prompt para o formato de mensagens que o llm_provider espera
+    messages = [
+        {"role": "user", "content": full_prompt}
+    ]
+    
+    collected_response = ""
+    
+    try:
+        # Chama a função de streaming com fallback do nosso provedor
+        logger.info(f"Iniciando stream de FAQ para a pergunta: '{question}'")
+        async for token in llm_provider.stream_with_fallback(messages):
+            collected_response += token
+            yield token
+            
+        # Salva a resposta completa no log se log_id foi fornecido
+        if log_id and collected_response:
+            success = await faq_log_model.update_faq_log_answer(log_id, collected_response)
+            if success:
+                logger.info(f"Resposta salva no log {log_id}")
+            else:
+                logger.error(f"Falha ao salvar resposta no log {log_id}")
+            
+    except Exception as e:
+        logger.error(f"Erro crítico durante o stream do FAQ: {e}")
+        error_message = "Opa, parece que o microfone aqui falhou! O Mestre da Várzea está resolvendo um problema técnico. Tente de novo daqui a pouco."
+        
+        # Salva a mensagem de erro no log se log_id foi fornecido
+        if log_id:
+            await faq_log_model.update_faq_log_answer(log_id, error_message)
+            
+        yield error_message
+
+async def generate_conversation_title(question: str) -> str:
+    """
+    Gera um título curto e descritivo para a conversa baseado na primeira pergunta.
+    """
+    title_prompt = f"""
+Crie um título curto e descritivo (máximo 6 palavras) para uma conversa que começou com esta pergunta sobre o jogo Urban Soccer:
+
+Pergunta: "{question}"
+
+Responda APENAS com o título, sem aspas ou explicações. O título deve capturar o tema principal da pergunta de forma concisa.
+
+Exemplos de bons títulos:
+- "Regras do Jogo"
+- "Arquétipos de Personagens"  
+- "Sistema de Campanhas"
+- "Dicas para Iniciantes"
+"""
+
+    messages = [{"role": "user", "content": title_prompt}]
+    
+    try:
+        # Usa a função do LLM provider para gerar o título
+        title = ""
+        async for token in llm_provider.stream_with_fallback(messages):
+            title += token
+            
+        # Limpa e valida o título
+        title = title.strip().replace('"', '').replace("'", "")
+        
+        # Se o título for muito longo ou vazio, usa um padrão
+        if len(title) > 50 or len(title) < 3:
+            return "Nova Conversa FAQ"
+            
+        return title
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar título da conversa: {e}")
+        return "Nova Conversa FAQ"
+
 async def ask_faq_stream(question: str) -> AsyncGenerator[str, None]:
     """
     Monta o prompt do FAQ no formato de mensagens e chama o provedor de LLM

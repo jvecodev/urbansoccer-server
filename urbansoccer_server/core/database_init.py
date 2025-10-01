@@ -58,6 +58,37 @@ DEFAULT_ADMIN_USER = {
     "password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBdXwtO5S5bq5q"  # hash de "admin123"
 }
 
+async def ensure_collections_exist(db):
+    """
+    Garante que todas as coleções necessárias existam no MongoDB.
+    O MongoDB só cria coleções quando o primeiro documento é inserido.
+    """
+    try:
+        collections_to_ensure = [
+            "players", 
+            "users", 
+            "campaigns", 
+            "user_characters", 
+            "faq_logs", 
+            "conversations"
+        ]
+        
+        existing_collections = await db.list_collection_names()
+        
+        for collection_name in collections_to_ensure:
+            if collection_name not in existing_collections:
+                # Cria a coleção inserindo e removendo um documento temporário
+                temp_collection = db[collection_name]
+                temp_doc = {"_temp": True, "created_at": datetime.utcnow()}
+                result = await temp_collection.insert_one(temp_doc)
+                await temp_collection.delete_one({"_id": result.inserted_id})
+                logger.info(f"✅ Coleção '{collection_name}' criada")
+            else:
+                logger.info(f"ℹ️ Coleção '{collection_name}' já existe")
+                
+    except Exception as e:
+        logger.error(f"❌ Erro ao garantir coleções: {e}")
+
 async def initialize_database():
     """Inicializa o banco de dados com dados padrão."""
     try:
@@ -70,14 +101,24 @@ async def initialize_database():
         campaign_collection = db["campaigns"]
         user_character_collection = db["user_characters"]
         faq_log_collection = db["faq_logs"]
+        conversations_collection = db["conversations"]
 
         try:
-            # Índices
+            # Índices existentes
             await user_collection.create_index("email", unique=True)
             await campaign_collection.create_index([("userId", 1)])
             await user_character_collection.create_index([("userId", 1), ("characterName", 1)], unique=True)
+            
+            # Índices para FAQ Logs
             await faq_log_collection.create_index([("userId", 1), ("timestamp", -1)])  # Para buscar por usuário e ordenar por data
             await faq_log_collection.create_index([("timestamp", -1)])  # Para buscar por data
+            await faq_log_collection.create_index([("conversationId", 1), ("timestamp", 1)])  # Para buscar mensagens de uma conversa
+            
+            # Índices para Conversações
+            await conversations_collection.create_index([("userId", 1), ("updatedAt", -1)])  # Para listar conversas do usuário
+            await conversations_collection.create_index([("userId", 1), ("createdAt", -1)])  # Para buscar por data de criação
+            
+            logger.info("✅ Índices criados/verificados com sucesso")
         except Exception as e:
             logger.info(f"⚠️ Índices já existem ou erro: {e}")
         
@@ -92,6 +133,11 @@ async def initialize_database():
             admin_user["createdAt"] = datetime.utcnow()
             # O hash da senha já está no objeto
             await user_collection.insert_one(admin_user)
+
+        # Garantir que as coleções existam (criando documento temporário se necessário)
+        await ensure_collections_exist(db)
+        
+        logger.info("✅ Banco de dados inicializado com sucesso!")
 
         await client.close()
         
