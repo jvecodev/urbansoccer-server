@@ -28,17 +28,7 @@ async def get_available_players():
     players = await player_model.get_available_players()
     return {"players": players}
 
-@router.get("/rarity/{rarity}", status_code=status.HTTP_200_OK, response_model=PlayerList)
-async def get_players_by_rarity(rarity: str):
-    """Retorna personagens por raridade (default ou unique)"""
-    if rarity not in ["default", "unique"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Raridade deve ser 'default' ou 'unique'"
-        )
-    
-    players = await player_model.get_players_by_rarity(rarity)
-    return {"players": players}
+
 
 @router.get("/{player_id}", status_code=status.HTTP_200_OK, response_model=PlayerPublic)
 async def get_player(player_id: str):

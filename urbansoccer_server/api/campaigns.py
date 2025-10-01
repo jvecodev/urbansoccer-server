@@ -126,31 +126,6 @@ async def get_campaign_with_details(
     
     return campaign
 
-@router.patch("/{campaign_id}", status_code=status.HTTP_200_OK, response_model=CampaignPublic)
-async def update_campaign(
-    campaign_id: str, 
-    campaign_update: CampaignUpdate, 
-    current_user: dict = Depends(get_current_user)
-):
-    """Atualiza dados da campanha"""
-    existing_campaign = await campaign_model.get_campaign_by_user_and_id(
-        current_user["_id"], campaign_id
-    )
-    if not existing_campaign:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Campanha não encontrada"
-        )
-    
-    update_data = campaign_update.model_dump(exclude_unset=True)
-    if not update_data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Nenhum dado para atualizar"
-        )
-    
-    updated_campaign = await campaign_model.update_campaign(campaign_id, update_data)
-    return updated_campaign
 
 @router.patch("/{campaign_id}/progress", status_code=status.HTTP_200_OK, response_model=CampaignPublic)
 async def update_campaign_progress(

@@ -10,9 +10,9 @@ services:
       # Suas variáveis de ambiente
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: urbansoccer_db
-      SECRET_KEY: Joao2006@
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
       GOOGLE_AISTUDIO_KEY: ${GOOGLE_AISTUDIO_KEY}
       CEREBRAS_KEY: ${CEREBRAS_KEY}
       GROQ_KEY: ${GROQ_KEY}
