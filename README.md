@@ -1,4 +1,3 @@
-![Banner do Urban Soccer](./public/logo-color.svg)
 
 # Urban Soccer: Backend API
 
