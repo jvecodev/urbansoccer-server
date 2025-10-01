@@ -119,6 +119,7 @@ Este método requer que você tenha uma instância do MongoDB rodando separadame
 
 O projeto segue uma estrutura modular e organizada para facilitar a manutenção e escalabilidade.
 
+```bash
 urbansoccer-server/
 ├── urbansoccer_server/
 │   ├── api/                 # Módulos de Rota (Endpoints da API)
@@ -152,3 +153,4 @@ urbansoccer-server/
 ├── Dockerfile               # Instruções para construir a imagem Docker da API
 ├── poetry.lock              # Arquivo de lock de dependências
 └── pyproject.toml           # Definição de dependências e metadados do projeto
+```
