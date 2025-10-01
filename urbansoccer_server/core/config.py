@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     MONGO_DB: str
     SECRET_KEY: str
     ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     OLLAMA_BASE_URL: Optional[str] = None 
     ELEVENLABS_API_KEY: Optional[str] = None
