@@ -9,15 +9,19 @@ app = FastAPI(
     version="0.2.0"
 )
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://urban-soccer.vercel.app",  
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition", "X-Conversation-ID"]
 )
-
 # Evento de inicialização
 @app.on_event("startup")
 async def startup_event():
