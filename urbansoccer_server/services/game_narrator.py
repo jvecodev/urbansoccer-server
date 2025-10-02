@@ -20,6 +20,6 @@ async def narrate_event(event_data: Dict) -> str:
 
     try:
         response_json = json.loads(llm_response_text)
-        return response_json.get("narration", "A jogada continua...")
+        return response_json.get("narration", "Jogada continua...")
     except (json.JSONDecodeError, AttributeError):
-        return "O juiz apita, a bola rola e a partida continua emocionante!"
+        return "Juiz apita!"

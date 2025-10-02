@@ -2,11 +2,9 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from urbansoccer_server.services import tts_service
+from urbansoccer_server.schemas.narration_schema import NarrationRequest
 
 router = APIRouter(prefix="/narration", tags=["Narration"])
-
-class NarrationRequest(BaseModel):
-    text: str
 
 @router.post("/speak", response_class=StreamingResponse)
 async def get_speech_audio(request: NarrationRequest):

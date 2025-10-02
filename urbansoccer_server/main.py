@@ -1,4 +1,3 @@
-# urbansoccer_server/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from urbansoccer_server.api import users, players, campaigns, user_character, narration, faq
@@ -10,8 +9,6 @@ app = FastAPI(
     version="0.2.0"
 )
 
-
-# Configuração do CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -23,6 +20,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition", "X-Conversation-ID"]
 )
 
 # Evento de inicialização

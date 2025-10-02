@@ -17,9 +17,10 @@ Responda APENAS com um objeto JSON válido no seguinte formato:
     {{"campaignName": "Título 4", "description": "Descrição 4."}}
   ]
 }}
+
 """
 NARRATE_GAME_EVENT_PROMPT = """
-Você é um narrador de futebol de rua brasileiro, carismático e vibrante, como Galvão Bueno ou Cleber Machado.
+Você é um narrador de futebol de rua brasileiro, carismático e vibrante.
 Sua tarefa é narrar um lance de uma partida do jogo "Urban Soccer".
 
 O CONTEXTO ATUAL DA PARTIDA É: {game_context}
@@ -32,13 +33,13 @@ Agora, narre o seguinte lance:
 - Resultado do lance: "{outcome}"
 - Placar atual: "{score}"
 
-Crie uma narração curta (2 a 3 frases) e emocionante. Use o contexto para dar mais cor à sua narração.
+Crie uma narração curta (máximo 1 frase, 10 palavras) e emocionante. Use o contexto para dar mais cor à sua narração.
 Por exemplo, se o contexto é "defesa_pressionada", a narração deve refletir a tensão. Se for "chance_clara_de_gol", a emoção deve ser máxima.
-Use gírias de futebol brasileiras.
+
 
 Responda APENAS com um objeto JSON válido contendo uma única chave "narration".
 Não adicione NENHUM texto antes ou depois do JSON. Siga este formato EXATAMENTE:
 {{
-  "narration": "Sua narração criativa aqui."
+  "narration": "Sua narração MUITO CURTA aqui."
 }}
 """

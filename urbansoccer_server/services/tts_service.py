@@ -23,7 +23,7 @@ async def text_to_speech_stream(text: str):
         # Sintaxe correta da API da ElevenLabs para streaming
         audio_stream = client.text_to_speech.stream(
             text=text,
-            voice_id='pNInz6obpgDQGcFmaJgB',
+            voice_id='gnPxliFHTp6OK6tcoA6i',
             voice_settings=VoiceSettings(
                 stability=0.4, 
                 similarity_boost=0.75, 
