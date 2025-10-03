@@ -1,4 +1,3 @@
-# urbansoccer_server/core/auth.py
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
@@ -43,7 +42,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if user is None:
         raise credentials_exception
     
-    # Remove a senha do retorno
     if "password" in user:
         del user["password"]
     return user

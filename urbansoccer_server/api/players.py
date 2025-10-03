@@ -1,4 +1,3 @@
-# urbansoccer_server/api/players.py
 from fastapi import APIRouter, HTTPException, status, Depends
 from urbansoccer_server.models import player_model
 from urbansoccer_server.schemas.player_schema import PlayerCreate, PlayerPublic, PlayerList, PlayerUpdate

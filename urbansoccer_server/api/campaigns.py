@@ -1,10 +1,8 @@
-# urbansoccer_server/api/campaigns.py
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from urbansoccer_server.services import game_logic, game_narrator
 from urbansoccer_server.schemas.campaign_schema import GameActionPayload, PlayResponse
 
-# Imports dos seus models e schemas existentes
 from urbansoccer_server.models import campaign_model, player_model, user_character_model
 from urbansoccer_server.schemas.campaign_schema import (
     CampaignCreate, 
@@ -16,7 +14,7 @@ from urbansoccer_server.schemas.campaign_schema import (
 )
 from urbansoccer_server.core.auth import get_current_user
 
-# Import do novo serviço de IA que criamos
+#Import do novo serviço de IA
 from urbansoccer_server.services import campaign_generator
 
 router = APIRouter(prefix="/campaigns", tags=["Campaigns"])
@@ -45,15 +43,14 @@ async def get_campaign_options(
             detail="Personagem do usuário não encontrado."
         )
 
-    # 2. Envia os detalhes do player para o serviço de IA gerar as opções
+    #Envia os detalhes do player para o serviço de IA gerar as opções
     player_details = user_char_with_player["player"]
     options = await campaign_generator.generate_campaign_options(player_details)
 
-    # 3. Retorna as opções para o frontend
+    #Retorna as opções para o frontend
     return {"options": options}
 
 
-# --- ROTAS EXISTENTES (sem alteração na lógica) ---
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=CampaignPublic)
 async def create_new_campaign(
@@ -117,7 +114,6 @@ async def get_campaign_with_details(
             detail="Campanha não encontrada"
         )
     
-    # Verifica se a campanha pertence ao usuário atual
     if campaign["userId"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -230,21 +226,17 @@ async def start_game(
     if not campaign:
         raise HTTPException(status_code=404, detail="Campanha não encontrada.")
 
-    # 1. A narração inicial é a própria descrição da campanha
     initial_narration = campaign.get("description", "A jornada começa agora.")
 
-    # 2. Pega o primeiro conjunto de cards da nossa lógica de jogo
     initial_cards = game_logic.get_initial_cards()
 
-    # 3. Define o estado inicial do jogo
     initial_game_state = {
         "score": "0 - 0",
         "time": 0,
         "commentary": "A bola vai rolar!",
-        "gameContext": "meio_campo"  # <-- ADICIONE AQUI
+        "gameContext": "meio_campo"
     }
 
-    # 4. Retorna o estado completo para o frontend
     return {
         "narration": initial_narration,
         "availableCards": initial_cards,
@@ -359,7 +351,6 @@ async def reset_campaign_progress(
     Reseta o progresso de uma campanha para o estado inicial.
     Útil para quando o jogador 'sai sem salvar'.
     """
-    # Valida se a campanha pertence ao usuário
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -369,7 +360,6 @@ async def reset_campaign_progress(
             detail="Campanha não encontrada"
         )
 
-    # Chama a nova função no model para fazer o reset
     updated_campaign = await campaign_model.reset_campaign(campaign_id)
 
     if not updated_campaign:
@@ -398,7 +388,6 @@ async def resume_game(
         
     progress = CampaignProgress(**campaign.get("progress", {}))
 
-    # Monta o estado do jogo a partir do progresso salvo
     game_state = {
         "score": f"Jogador {progress.score} - {progress.opponent_score} Adversário",
         "time": progress.time,
@@ -406,7 +395,6 @@ async def resume_game(
         "gameContext": progress.gameContext
     }
 
-    # Retorna o estado completo para o frontend
     return {
         "narration": "Bem-vindo de volta! O jogo continua de onde você parou.",
         "availableCards": progress.availableCards,

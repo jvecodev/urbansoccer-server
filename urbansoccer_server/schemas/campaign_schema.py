@@ -16,7 +16,7 @@ class CampaignProgress(BaseModel):
     currentMission: str = Field(default="Primeira Missão")
     inventory: List[str] = Field(default_factory=list)
     availableCards: List[Card] = Field(default_factory=list) 
-    gameContext: str = Field(default="meio_campo", description="Situação atual da partida") # Adicionado
+    gameContext: str = Field(default="meio_campo", description="Situação atual da partida") 
 
 class CampaignBase(BaseModel):
     userId: str = Field(..., description="ID do usuário proprietário da campanha")
@@ -72,9 +72,9 @@ class GameActionPayload(BaseModel):
 
 class GameState(BaseModel):
     score: str
-    time: int # Representando os 'lances'
+    time: int 
     commentary: str
-    gameContext: str = Field(default="meio_campo", description="A situação atual no campo") # <-- ADICIONE ESTA LINHA
+    gameContext: str = Field(default="meio_campo", description="A situação atual no campo") 
 
 class PlayResponse(BaseModel):
     narration: str

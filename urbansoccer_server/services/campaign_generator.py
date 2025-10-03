@@ -8,7 +8,6 @@ async def generate_campaign_options(player_info: Dict) -> List[Dict]:
         player_special_ability=player_info.get("stats", {}).get("specialAbility")
     )
 
-    # --- ALTERAÇÃO AQUI ---
     llm_response_text = await llm_provider.generate_with_fallback(prompt)
 
     try:

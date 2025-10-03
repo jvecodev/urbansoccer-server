@@ -1,4 +1,3 @@
-# urbansoccer_server/schemas/user_character_schema.py
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime

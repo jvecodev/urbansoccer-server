@@ -1,4 +1,3 @@
-# urbansoccer_server/models/user_character_model.py
 from pymongo import AsyncMongoClient
 from bson import ObjectId
 from typing import List, Optional

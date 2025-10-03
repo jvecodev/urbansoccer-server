@@ -1,4 +1,3 @@
-# urbansoccer_server/models/user_model.py
 from pymongo import AsyncMongoClient
 from bson import ObjectId
 from typing import List, Optional
@@ -6,7 +5,6 @@ from passlib.context import CryptContext
 
 from urbansoccer_server.core.config import settings
 
-# Configuração para hash de senha
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Conexão com o banco
@@ -76,7 +74,6 @@ async def update_user(user_id: str, data_to_update: dict) -> Optional[dict]:
     if not ObjectId.is_valid(user_id):
         return None
     
-    # Se a senha está sendo atualizada, fazer o hash
     if "password" in data_to_update:
         data_to_update["password"] = hash_password(data_to_update["password"])
     

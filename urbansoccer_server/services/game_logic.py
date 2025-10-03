@@ -1,7 +1,6 @@
 import random
 from typing import Dict, List, Tuple
 
-# Expandimos os cards para incluir ações defensivas e mais opções
 ALL_CARDS = {
     # Ataque
     "chutar_area": {"actionId": "chutar_area", "label": "Chutar da Área", "description": "Um chute forte e preciso de perto."},
@@ -32,7 +31,7 @@ def get_initial_cards() -> List[Dict]:
     """Retorna as primeiras ações disponíveis no início da partida."""
     return CONTEXT_CARDS["meio_campo"]
 
-# A função agora recebe e retorna o contexto do jogo
+#A função agora recebe e retorna o contexto do jogo
 def process_player_action(player_stats: Dict, action_id: str, current_context: str) -> Tuple[str, str, List[Dict], bool]:
     """
     Processa a ação, calcula o resultado e retorna os próximos cards e o novo contexto.
@@ -41,7 +40,7 @@ def process_player_action(player_stats: Dict, action_id: str, current_context: s
     chance_de_sucesso = 50
     opponent_scored = False
     
-    # A chance de sucesso pode depender da ação
+    #A chance de sucesso pode depender da ação
     if action_id in ["chutar_area", "chutar_fora"]:
         chance_de_sucesso += player_stats.get("attack", 0) // 3
     elif action_id in ["drible_rapido", "drible_curto"]:
@@ -55,7 +54,7 @@ def process_player_action(player_stats: Dict, action_id: str, current_context: s
         if current_context == "meio_campo":
             if action_id == "drible_rapido":
                 return "Você arranca em velocidade e chega na entrada da área!", "ataque", CONTEXT_CARDS["ataque"], False
-            else: # passe longo ou curto
+            else: 
                 return "Com uma bela troca de passes, o time avança!", "ataque", CONTEXT_CARDS["ataque"], False
         
         elif current_context == "ataque":
@@ -63,7 +62,7 @@ def process_player_action(player_stats: Dict, action_id: str, current_context: s
                 return "GOL! Que finalização! A bola beija a rede!", "meio_campo", CONTEXT_CARDS["meio_campo"], False
             elif action_id == "drible_curto":
                 return "Que drible! Você deixa o zagueiro no chão e fica cara a cara com o goleiro!", "chance_clara_de_gol", CONTEXT_CARDS["chance_clara_de_gol"], False
-            else: # cavar falta
+            else: 
                 return "Você sofre a falta perto da área! É uma ótima oportunidade!", "ataque", [ALL_CARDS["chutar_fora"]], False # Cobrança de falta
 
         elif current_context == "chance_clara_de_gol":
@@ -72,12 +71,10 @@ def process_player_action(player_stats: Dict, action_id: str, current_context: s
         elif current_context == "defesa_pressionada":
             return "Com um desarme preciso, você recupera a posse de bola!", "meio_campo", CONTEXT_CARDS["meio_campo"], False
 
-    else: # Falha
-        # Se falhar, há chance de contra-ataque
-        if random.randint(1, 100) < 30: # 30% de chance do oponente marcar
+    else: 
+        if random.randint(1, 100) < 30: #30% de chance do oponente marcar
             return "Você erra a jogada e o adversário arma um contra-ataque letal. É gol deles.", "meio_campo", CONTEXT_CARDS["meio_campo"], True
         else:
             return "Você perde a bola e agora precisa se defender!", "defesa_pressionada", CONTEXT_CARDS["defesa_pressionada"], False
 
-    # Fallback caso alguma condição não seja atendida
     return "A jogada segue disputada no meio-campo.", "meio_campo", CONTEXT_CARDS["meio_campo"], False

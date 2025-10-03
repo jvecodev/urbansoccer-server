@@ -1,4 +1,3 @@
-# urbansoccer_server/schemas/faq_schema.py
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import List, Optional

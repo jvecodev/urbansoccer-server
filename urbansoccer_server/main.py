@@ -22,7 +22,6 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Content-Disposition", "X-Conversation-ID"]
 )
-# Evento de inicialização
 @app.on_event("startup")
 async def startup_event():
     """Executa a inicialização do banco quando a aplicação inicia"""

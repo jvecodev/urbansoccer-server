@@ -1,4 +1,3 @@
-# urbansoccer_server/api/users.py
 from datetime import timedelta
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials

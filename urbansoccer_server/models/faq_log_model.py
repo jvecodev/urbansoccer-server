@@ -5,7 +5,6 @@ from bson import ObjectId
 from urbansoccer_server.core.config import settings
 import logging
 
-# Configuração do logging
 logger = logging.getLogger(__name__)
 
 # Conexão com o banco
@@ -35,11 +34,9 @@ async def create_faq_log(question: str, user_id: str, conversation_id: str = Non
             "timestamp": datetime.utcnow()
         }
         
-        # Adiciona a conversa se fornecida
         if conversation_id is not None:
             log_entry["conversationId"] = conversation_id
         
-        # Adiciona a resposta se fornecida
         if answer is not None:
             log_entry["answer"] = answer
         

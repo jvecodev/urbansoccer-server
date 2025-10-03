@@ -1,4 +1,3 @@
-# urbansoccer_server/core/database_init.py
 import logging
 import asyncio
 from datetime import datetime
@@ -82,7 +81,6 @@ async def ensure_collections_exist(db):
                 temp_doc = {"_temp": True, "created_at": datetime.utcnow()}
                 result = await temp_collection.insert_one(temp_doc)
                 await temp_collection.delete_one({"_id": result.inserted_id})
-                logger.info(f"✅ Coleção '{collection_name}' criada")
             else:
                 logger.info(f"ℹ️ Coleção '{collection_name}' já existe")
                 
@@ -95,7 +93,6 @@ async def initialize_database():
         client = AsyncMongoClient(settings.MONGO_URI)
         db = client[settings.MONGO_DB]
         
-        # Collections
         player_collection = db["players"]
         user_collection = db["users"] 
         campaign_collection = db["campaigns"]
@@ -104,21 +101,17 @@ async def initialize_database():
         conversations_collection = db["conversations"]
 
         try:
-            # Índices existentes
             await user_collection.create_index("email", unique=True)
             await campaign_collection.create_index([("userId", 1)])
             await user_character_collection.create_index([("userId", 1), ("characterName", 1)], unique=True)
             
-            # Índices para FAQ Logs
-            await faq_log_collection.create_index([("userId", 1), ("timestamp", -1)])  # Para buscar por usuário e ordenar por data
-            await faq_log_collection.create_index([("timestamp", -1)])  # Para buscar por data
-            await faq_log_collection.create_index([("conversationId", 1), ("timestamp", 1)])  # Para buscar mensagens de uma conversa
+            await faq_log_collection.create_index([("userId", 1), ("timestamp", -1)])  
+            await faq_log_collection.create_index([("timestamp", -1)])  
+            await faq_log_collection.create_index([("conversationId", 1), ("timestamp", 1)])  
             
-            # Índices para Conversações
-            await conversations_collection.create_index([("userId", 1), ("updatedAt", -1)])  # Para listar conversas do usuário
-            await conversations_collection.create_index([("userId", 1), ("createdAt", -1)])  # Para buscar por data de criação
+            await conversations_collection.create_index([("userId", 1), ("updatedAt", -1)]) 
+            await conversations_collection.create_index([("userId", 1), ("createdAt", -1)])  
             
-            logger.info("✅ Índices criados/verificados com sucesso")
         except Exception as e:
             logger.info(f"⚠️ Índices já existem ou erro: {e}")
         
@@ -127,24 +120,19 @@ async def initialize_database():
                 player["createdAt"] = datetime.utcnow()
             await player_collection.insert_many(DEFAULT_PLAYERS)
         
-        # Verificar e criar usuário admin
         if not await user_collection.find_one({"email": DEFAULT_ADMIN_USER["email"]}):
             admin_user = DEFAULT_ADMIN_USER.copy()
             admin_user["createdAt"] = datetime.utcnow()
-            # O hash da senha já está no objeto
             await user_collection.insert_one(admin_user)
 
-        # Garantir que as coleções existam (criando documento temporário se necessário)
         await ensure_collections_exist(db)
         
-        logger.info("✅ Banco de dados inicializado com sucesso!")
 
         await client.close()
         
     except Exception as e:
         logger.error(f"❌ Erro durante a inicialização do banco: {e}")
 
-# ... (o resto do arquivo, run_database_initialization, continua igual)
 def run_database_initialization():
     """Executa a inicialização do banco de forma síncrona"""
     try:

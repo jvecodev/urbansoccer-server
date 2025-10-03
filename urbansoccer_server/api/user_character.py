@@ -1,4 +1,3 @@
-# urbansoccer_server/api/user_character.py
 from fastapi import APIRouter, HTTPException, status, Depends
 
 from urbansoccer_server.models import user_character_model

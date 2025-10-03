@@ -1,4 +1,3 @@
-# urbansoccer_server/models/campaign_model.py
 from pymongo import AsyncMongoClient
 from bson import ObjectId
 from typing import List, Optional
@@ -17,13 +16,10 @@ def normalize_campaign_data(campaign: dict) -> dict:
         if "_id" in campaign:
             campaign["_id"] = str(campaign["_id"])
         
-        # Se tem playerId mas não tem userCharacterId, mantém ambos por compatibilidade
-        # Isso permite que campanhas antigas ainda funcionem
         if "playerId" in campaign and "userCharacterId" not in campaign:
-            # Por enquanto, mantemos o playerId até termos um mapeamento adequado
             campaign["userCharacterId"] = None
         
-        # Garante que lastPlayedDate existe (para campanhas antigas)
+        #Garante que lastPlayedDate existe (para campanhas antigas)
         if "lastPlayedDate" not in campaign:
             campaign["lastPlayedDate"] = campaign.get("startDate")
     
@@ -184,7 +180,6 @@ async def get_campaign_with_details(campaign_id: str) -> Optional[dict]:
     if campaign:
         campaign = campaign[0]
         campaign = normalize_campaign_data(campaign)
-        # Remove senha do usuário se existir
         if campaign.get("user") and "password" in campaign["user"]:
             del campaign["user"]["password"]
         return campaign
@@ -206,7 +201,7 @@ async def reset_campaign(campaign_id: str) -> Optional[dict]:
         "time": 0,
         "currentMission": "Primeira Missão",
         "inventory": [],
-        "availableCards": [], # Limpa os cards
+        "availableCards": [],
         "gameContext": "meio_campo" # Retorna ao início
     }
 
@@ -222,5 +217,4 @@ async def reset_campaign(campaign_id: str) -> Optional[dict]:
         }
     )
 
-    # Retorna a campanha atualizada para confirmar
     return await get_campaign_by_id(campaign_id)

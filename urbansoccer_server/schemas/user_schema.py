@@ -1,4 +1,3 @@
-# urbansoccer_server/schemas/user_schema.py
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import List, Optional, Any
 from bson import ObjectId

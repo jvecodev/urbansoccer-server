@@ -21,7 +21,6 @@ async def _save_faq_log_with_logging(question: str, user_id: str, conversation_i
     try:
         result = await faq_log_model.create_faq_log(question, user_id, conversation_id)
         if result:
-            # Incrementa contador de mensagens se faz parte de uma conversa
             if conversation_id:
                 await faq_log_model.increment_message_count(conversation_id)
             logger.info(f"FAQ log salvo com sucesso: {result}")
@@ -47,10 +46,8 @@ async def stream_faq_answer(
     user_id = current_user["_id"]
     conversation_id = request.conversation_id
     
-    # Se não foi fornecido conversation_id, cria uma nova conversa
     if not conversation_id:
         try:
-            # Gera título automaticamente baseado na pergunta
             title = await faq_service.generate_conversation_title(request.question)
             conversation_id = await faq_log_model.create_conversation(title, user_id)
             
@@ -60,13 +57,11 @@ async def stream_faq_answer(
         except Exception as e:
             logger.error(f"Erro ao criar nova conversa: {e}")
     
-    # Salva a pergunta primeiro para obter o log_id
     log_id = await _save_faq_log_with_logging(request.question, user_id, conversation_id)
     
     if not log_id:
         logger.error("Falha ao criar log inicial - continuando sem salvar resposta")
 
-    # Adiciona conversation_id no header da resposta se foi criada uma nova conversa
     headers = {
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
@@ -126,7 +121,6 @@ async def delete_faq_question(
         raise HTTPException(status_code=500, detail="Erro interno ao deletar pergunta")
 
 
-# ======= ENDPOINTS DE CONVERSAÇÃO =======
 
 @router.get("/conversations", response_model=ConversationList)
 async def get_user_conversations(current_user: dict = Depends(get_current_user)):
@@ -185,7 +179,6 @@ async def get_conversation_with_messages(
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversa não encontrada")
         
-        # Busca as mensagens da conversa
         messages = await faq_log_model.get_conversation_messages(conversation_id, user_id)
         
         return {
@@ -211,7 +204,6 @@ async def update_conversation_title(
     user_id = current_user["_id"]
     
     try:
-        # Verifica se a conversa pertence ao usuário
         conversation = await faq_log_model.get_conversation_by_id(conversation_id, user_id)
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversa não encontrada")
