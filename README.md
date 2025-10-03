@@ -34,7 +34,7 @@ A API é construída utilizando uma stack moderna de Python, focada em performan
 
 -   **Inteligência Artificial e LLMs**:
     -   **LiteLLM**: Uma camada de abstração para chamar mais de 100 serviços de LLM diferentes usando um formato de entrada consistente.
-    -   **Google AI Studio**: Integrado para usar os modelos da família **Gemini** (ex: `gemini-1.5-flash`).
+    -   **Google AI Studio**: Integrado para usar os modelos da família **Gemini** (ex: `gemini-2.5-flash`).
     -   **Groq**: Para acesso a modelos de alta velocidade, como o **Llama 3** (`llama3-70b-8192`).
     -   **Cerebras**: Para acesso aos modelos **Llama 3.1** (`llama3.1-8b`, `llama3.1-70b`).
     -   **ElevenLabs**: Para a funcionalidade de Text-to-Speech (TTS), convertendo as narrações do jogo em áudio de alta qualidade.
