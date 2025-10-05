@@ -16,7 +16,6 @@ async def get_speech_audio(request: NarrationRequest):
         if not audio_stream:
             raise HTTPException(status_code=500, detail="Falha ao gerar o stream de áudio.")
 
-        # Retorna o áudio como um stream mp3
         return StreamingResponse(audio_stream, media_type="audio/mpeg")
 
     except Exception as e:

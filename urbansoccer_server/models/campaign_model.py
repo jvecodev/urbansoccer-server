@@ -11,7 +11,9 @@ db = client[settings.MONGO_DB]
 campaign_collection = db["campaigns"]
 
 def normalize_campaign_data(campaign: dict) -> dict:
+
     """Normaliza dados da campanha para compatibilidade com schema novo"""
+
     if campaign:
         if "_id" in campaign:
             campaign["_id"] = str(campaign["_id"])
@@ -19,7 +21,6 @@ def normalize_campaign_data(campaign: dict) -> dict:
         if "playerId" in campaign and "userCharacterId" not in campaign:
             campaign["userCharacterId"] = None
         
-        #Garante que lastPlayedDate existe (para campanhas antigas)
         if "lastPlayedDate" not in campaign:
             campaign["lastPlayedDate"] = campaign.get("startDate")
     
@@ -32,7 +33,6 @@ async def create_campaign(user_id: str, campaign_data: dict) -> dict:
     campaign_data["lastPlayedDate"] = datetime.utcnow()
     campaign_data["status"] = "active"
     
-    # Define progresso inicial se não fornecido
     if "progress" not in campaign_data:
         campaign_data["progress"] = {
             "level": 1,
@@ -80,7 +80,6 @@ async def update_campaign(campaign_id: str, data_to_update: dict) -> Optional[di
     if not ObjectId.is_valid(campaign_id):
         return None
     
-    # Atualiza a data da última jogada automaticamente
     data_to_update["lastPlayedDate"] = datetime.utcnow()
     
     await campaign_collection.update_one(
@@ -106,7 +105,9 @@ async def update_campaign_progress(campaign_id: str, progress_data: dict) -> Opt
     return await get_campaign_by_id(campaign_id)
 
 async def delete_campaign(campaign_id: str) -> bool:
+
     """Deleta uma campanha"""
+
     if not ObjectId.is_valid(campaign_id):
         return False
     
@@ -114,20 +115,28 @@ async def delete_campaign(campaign_id: str) -> bool:
     return result.deleted_count > 0
 
 async def abandon_campaign(campaign_id: str) -> Optional[dict]:
+
     """Marca uma campanha como abandonada"""
+
     return await update_campaign(campaign_id, {"status": "abandoned"})
 
 async def complete_campaign(campaign_id: str) -> Optional[dict]:
+
     """Marca uma campanha como completada"""
+
     return await update_campaign(campaign_id, {"status": "completed"})
 
 async def get_campaigns_by_player(player_id: str) -> List[dict]:
+
     """Retorna todas as campanhas que usam um personagem específico"""
+
     campaigns = await campaign_collection.find({"playerId": player_id}).to_list(length=None)
     return [normalize_campaign_data(campaign) for campaign in campaigns]
 
 async def check_user_has_active_campaign_with_player(user_id: str, player_id: str) -> bool:
+
     """Verifica se o usuário já tem uma campanha ativa com este personagem"""
+
     campaign = await campaign_collection.find_one({
         "userId": user_id,
         "playerId": player_id,
@@ -188,9 +197,11 @@ async def get_campaign_with_details(campaign_id: str) -> Optional[dict]:
 
 
 async def reset_campaign(campaign_id: str) -> Optional[dict]:
+
     """
     Reseta o progresso de uma campanha para seu estado inicial.
     """
+
     if not ObjectId.is_valid(campaign_id):
         return None
 
@@ -202,7 +213,7 @@ async def reset_campaign(campaign_id: str) -> Optional[dict]:
         "currentMission": "Primeira Missão",
         "inventory": [],
         "availableCards": [],
-        "gameContext": "meio_campo" # Retorna ao início
+        "gameContext": "meio_campo"
     }
 
     

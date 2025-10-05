@@ -58,10 +58,12 @@ DEFAULT_ADMIN_USER = {
 }
 
 async def ensure_collections_exist(db):
+    
     """
     Garante que todas as coleções necessárias existam no MongoDB.
     O MongoDB só cria coleções quando o primeiro documento é inserido.
     """
+
     try:
         collections_to_ensure = [
             "players", 
@@ -88,7 +90,9 @@ async def ensure_collections_exist(db):
         logger.error(f"❌ Erro ao garantir coleções: {e}")
 
 async def initialize_database():
+
     """Inicializa o banco de dados com dados padrão."""
+
     try:
         client = AsyncMongoClient(settings.MONGO_URI)
         db = client[settings.MONGO_DB]
@@ -134,6 +138,7 @@ async def initialize_database():
         logger.error(f"❌ Erro durante a inicialização do banco: {e}")
 
 def run_database_initialization():
+
     """Executa a inicialização do banco de forma síncrona"""
     try:
         try:

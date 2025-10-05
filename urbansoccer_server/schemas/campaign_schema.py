@@ -34,7 +34,9 @@ class CampaignCreate(BaseModel):
 
 
 class CampaignUpdate(BaseModel):
+
     """Schema para atualizações futuras na campanha."""
+
     campaignName: Optional[str] = None
     status: Optional[str] = None
     progress: Optional[CampaignProgress] = None
@@ -59,7 +61,9 @@ class CampaignPublic(CampaignBase):
         return cls(**campaign_dict)
 
 class CampaignWithDetails(CampaignPublic):
+
     """Campaign com detalhes do usuário e player."""
+    
     user: Optional[dict] = None
     player: Optional[dict] = None
 

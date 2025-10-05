@@ -7,25 +7,30 @@ from urbansoccer_server.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Conexão com o banco
 client = AsyncMongoClient(settings.MONGO_URI)
 db = client[settings.MONGO_DB]
 user_collection = db["users"]
 
 def hash_password(password: str) -> str:
+
     """Gera hash da senha"""
+
     if len(password.encode('utf-8')) > 72:
         password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+
     """Verifica se a senha está correta"""
+
     if len(plain_password.encode('utf-8')) > 72:
         plain_password = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.verify(plain_password, hashed_password)
 
 async def create_user(user_data: dict) -> dict:
+
     """Cria um novo usuário com senha hasheada"""
+
     user_data["password"] = hash_password(user_data["password"])
     result = await user_collection.insert_one(user_data)
     new_user = await user_collection.find_one({"_id": result.inserted_id})
@@ -36,7 +41,9 @@ async def create_user(user_data: dict) -> dict:
     return new_user
 
 async def get_all_users() -> List[dict]:
+
     """Retorna todos os usuários sem as senhas"""
+
     users = await user_collection.find({}, {"password": 0}).to_list(length=None)
     for user in users:
         if "_id" in user:
@@ -44,7 +51,9 @@ async def get_all_users() -> List[dict]:
     return users
 
 async def get_user_by_id(user_id: str) -> Optional[dict]:
+
     """Busca usuário por ID sem retornar a senha"""
+
     if not ObjectId.is_valid(user_id):
         return None
     user = await user_collection.find_one({"_id": ObjectId(user_id)}, {"password": 0})
@@ -53,14 +62,18 @@ async def get_user_by_id(user_id: str) -> Optional[dict]:
     return user
 
 async def get_user_by_email(email: str) -> Optional[dict]:
+
     """Busca usuário por email (incluindo senha para autenticação)"""
+
     user = await user_collection.find_one({"email": email})
     if user and "_id" in user:
         user["_id"] = str(user["_id"])
     return user
 
 async def authenticate_user(email: str, password: str) -> Optional[dict]:
+
     """Autentica um usuário"""
+
     user = await get_user_by_email(email)
     if not user:
         return None
@@ -70,7 +83,9 @@ async def authenticate_user(email: str, password: str) -> Optional[dict]:
     return user
 
 async def update_user(user_id: str, data_to_update: dict) -> Optional[dict]:
+
     """Atualiza dados do usuário"""
+    
     if not ObjectId.is_valid(user_id):
         return None
     

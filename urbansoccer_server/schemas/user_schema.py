@@ -24,7 +24,9 @@ class UserPublic(UserBase):
     
     @classmethod
     def from_mongo(cls, user_dict: dict) -> "UserPublic":
+
         """Converte um documento do MongoDB para UserPublic"""
+        
         if user_dict and "_id" in user_dict:
             user_dict["_id"] = str(user_dict["_id"])
         return cls(**user_dict)

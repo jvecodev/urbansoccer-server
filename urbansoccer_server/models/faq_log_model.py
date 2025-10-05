@@ -7,7 +7,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Conexão com o banco
 client = AsyncMongoClient(settings.MONGO_URI)
 db = client[settings.MONGO_DB]
 faq_log_collection = db["faq_logs"]
@@ -115,6 +114,7 @@ async def update_faq_log_answer(log_id: str, answer: str) -> bool:
         return False
 
 async def delete_faq_log(log_id: str, user_id: str) -> bool:
+
     """
     Deleta uma pergunta específica do FAQ, verificando se pertence ao usuário.
     
@@ -125,13 +125,12 @@ async def delete_faq_log(log_id: str, user_id: str) -> bool:
     Returns:
         True se deletado com sucesso, False caso contrário
     """
+
     try:
-        # Valida se o log_id é um ObjectId válido
         if not ObjectId.is_valid(log_id):
             logger.warning(f"ID inválido fornecido: {log_id}")
             return False
         
-        # Deleta apenas se o log pertence ao usuário
         result = await faq_log_collection.delete_one({
             "_id": ObjectId(log_id),
             "userId": user_id
@@ -149,9 +148,9 @@ async def delete_faq_log(log_id: str, user_id: str) -> bool:
         return False
 
 
-# ======= FUNÇÕES DE CONVERSAÇÃO =======
 
 async def create_conversation(title: str, user_id: str) -> Optional[str]:
+
     """
     Cria uma nova conversa para o usuário.
     
@@ -162,6 +161,7 @@ async def create_conversation(title: str, user_id: str) -> Optional[str]:
     Returns:
         O ID da conversa criada ou None em caso de erro
     """
+
     try:
         conversation_entry = {
             "title": title,
@@ -185,6 +185,7 @@ async def create_conversation(title: str, user_id: str) -> Optional[str]:
         return None
 
 async def update_conversation_title(conversation_id: str, title: str) -> bool:
+
     """
     Atualiza o título de uma conversa.
     
@@ -195,6 +196,7 @@ async def update_conversation_title(conversation_id: str, title: str) -> bool:
     Returns:
         True se atualizado com sucesso, False caso contrário
     """
+
     try:
         if not ObjectId.is_valid(conversation_id):
             logger.warning(f"ID de conversa inválido: {conversation_id}")
@@ -222,6 +224,7 @@ async def update_conversation_title(conversation_id: str, title: str) -> bool:
         return False
 
 async def increment_message_count(conversation_id: str) -> bool:
+
     """
     Incrementa o contador de mensagens de uma conversa e atualiza o timestamp.
     
@@ -231,6 +234,7 @@ async def increment_message_count(conversation_id: str) -> bool:
     Returns:
         True se atualizado com sucesso, False caso contrário
     """
+
     try:
         if not ObjectId.is_valid(conversation_id):
             logger.warning(f"ID de conversa inválido: {conversation_id}")
@@ -251,6 +255,7 @@ async def increment_message_count(conversation_id: str) -> bool:
         return False
 
 async def get_user_conversations(user_id: str, limit: int = 20) -> List[Dict]:
+
     """
     Busca as conversas do usuário ordenadas por data de atualização (mais recentes primeiro).
     
@@ -261,6 +266,7 @@ async def get_user_conversations(user_id: str, limit: int = 20) -> List[Dict]:
     Returns:
         Lista de conversas do usuário
     """
+
     try:
         conversations_cursor = conversations_collection.find(
             {"userId": user_id}
@@ -268,7 +274,6 @@ async def get_user_conversations(user_id: str, limit: int = 20) -> List[Dict]:
         
         conversations = await conversations_cursor.to_list(length=limit)
         
-        # Converte ObjectId para string
         for conversation in conversations:
             if "_id" in conversation:
                 conversation["_id"] = str(conversation["_id"])
@@ -279,6 +284,7 @@ async def get_user_conversations(user_id: str, limit: int = 20) -> List[Dict]:
         return []
 
 async def get_conversation_by_id(conversation_id: str, user_id: str) -> Optional[Dict]:
+
     """
     Busca uma conversa específica, verificando se pertence ao usuário.
     
@@ -289,6 +295,7 @@ async def get_conversation_by_id(conversation_id: str, user_id: str) -> Optional
     Returns:
         Dados da conversa ou None se não encontrada
     """
+
     try:
         if not ObjectId.is_valid(conversation_id):
             logger.warning(f"ID de conversa inválido: {conversation_id}")
@@ -308,6 +315,7 @@ async def get_conversation_by_id(conversation_id: str, user_id: str) -> Optional
         return None
 
 async def get_conversation_messages(conversation_id: str, user_id: str, limit: int = 50) -> List[Dict]:
+
     """
     Busca todas as mensagens de uma conversa específica.
     
@@ -319,21 +327,19 @@ async def get_conversation_messages(conversation_id: str, user_id: str, limit: i
     Returns:
         Lista de mensagens da conversa ordenadas por timestamp
     """
+
     try:
-        # Primeiro verifica se a conversa pertence ao usuário
         conversation = await get_conversation_by_id(conversation_id, user_id)
         if not conversation:
             logger.warning(f"Conversa {conversation_id} não encontrada ou não pertence ao usuário {user_id}")
             return []
         
-        # Busca as mensagens da conversa
         messages_cursor = faq_log_collection.find(
             {"conversationId": conversation_id}
         ).sort("timestamp", 1).limit(limit)
         
         messages = await messages_cursor.to_list(length=limit)
         
-        # Converte ObjectId para string
         for message in messages:
             if "_id" in message:
                 message["_id"] = str(message["_id"])
@@ -344,6 +350,7 @@ async def get_conversation_messages(conversation_id: str, user_id: str, limit: i
         return []
 
 async def delete_conversation(conversation_id: str, user_id: str) -> bool:
+
     """
     Deleta uma conversa e todas as suas mensagens, verificando se pertence ao usuário.
     
@@ -354,17 +361,16 @@ async def delete_conversation(conversation_id: str, user_id: str) -> bool:
     Returns:
         True se deletada com sucesso, False caso contrário
     """
+
     try:
         if not ObjectId.is_valid(conversation_id):
             logger.warning(f"ID de conversa inválido: {conversation_id}")
             return False
         
-        # Primeiro deleta todas as mensagens da conversa
         await faq_log_collection.delete_many({
             "conversationId": conversation_id
         })
         
-        # Depois deleta a conversa
         result = await conversations_collection.delete_one({
             "_id": ObjectId(conversation_id),
             "userId": user_id

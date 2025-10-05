@@ -33,10 +33,12 @@ def get_initial_cards() -> List[Dict]:
 
 #A função agora recebe e retorna o contexto do jogo
 def process_player_action(player_stats: Dict, action_id: str, current_context: str) -> Tuple[str, str, List[Dict], bool]:
+
     """
     Processa a ação, calcula o resultado e retorna os próximos cards e o novo contexto.
     Retorna: (resultado_texto, novo_contexto, proximos_cards, oponente_marcou)
     """
+    
     chance_de_sucesso = 50
     opponent_scored = False
     

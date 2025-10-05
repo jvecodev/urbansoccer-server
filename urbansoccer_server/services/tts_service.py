@@ -20,9 +20,10 @@ async def text_to_speech_stream(text: str):
         raise RuntimeError("API da ElevenLabs não configurada.")
     
     try:
-        # Sintaxe correta da API da ElevenLabs para streaming
+        #API da ElevenLabs para streaming
         audio_stream = client.text_to_speech.stream(
             text=text,
+            # ID da voz padrão
             voice_id='gnPxliFHTp6OK6tcoA6i',
             voice_settings=VoiceSettings(
                 stability=0.4, 

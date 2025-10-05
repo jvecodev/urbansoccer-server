@@ -22,7 +22,6 @@ class FAQLog(BaseModel):
 class FAQLogList(BaseModel):
     logs: List[FAQLog]
 
-# ======= MODELOS DE CONVERSAÇÃO =======
 
 class Conversation(BaseModel):
     id: str = Field(..., alias="_id")

@@ -14,14 +14,14 @@ from urbansoccer_server.schemas.campaign_schema import (
 )
 from urbansoccer_server.core.auth import get_current_user
 
-#Import do novo serviço de IA
 from urbansoccer_server.services import campaign_generator
 
 router = APIRouter(prefix="/campaigns", tags=["Campaigns"])
 
 
 class CampaignGenerationRequest(BaseModel):
-    """Schema para o corpo da requisição da geração de campanhas."""
+
+    """Schema para a requisição de geração de campanhas."""
     user_character_id: str
 
 @router.post("/generate-options", status_code=status.HTTP_200_OK)
@@ -29,12 +29,17 @@ async def get_campaign_options(
     request: CampaignGenerationRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """
-    Gera 4 opções de campanhas iniciais usando IA, baseado no personagem do usuário.
+    """Gera 4 opções de campanhas via IA baseado no personagem.
+
+    Args:
+        request: Contém o ID do personagem do usuário.
+        current_user: Usuário autenticado.
+
+    Returns:
+        Um dicionário com uma lista de opções de campanha.
     """
     user_id = current_user["_id"]
     
-    # 1. Busca o personagem do usuário para obter os detalhes do player associado
     user_char_with_player = await user_character_model.get_user_character_with_player(request.user_character_id, user_id)
 
     if not user_char_with_player or "player" not in user_char_with_player:
@@ -43,11 +48,9 @@ async def get_campaign_options(
             detail="Personagem do usuário não encontrado."
         )
 
-    #Envia os detalhes do player para o serviço de IA gerar as opções
     player_details = user_char_with_player["player"]
     options = await campaign_generator.generate_campaign_options(player_details)
 
-    #Retorna as opções para o frontend
     return {"options": options}
 
 
@@ -57,18 +60,22 @@ async def create_new_campaign(
     campaign: CampaignCreate, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Cria uma nova campanha para o usuário autenticado"""
+    """Cria uma nova campanha para o usuário autenticado.
+
+    Args:
+        campaign: Dados da campanha a ser criada.
+        current_user: Usuário autenticado.
+    Returns:
+        A campanha recém-criada.
+    """
     user_id = current_user["_id"]
     
-    # 1. Verifica se o personagem customizado existe e pertence ao usuário
     character = await user_character_model.get_user_character_by_id(campaign.userCharacterId, user_id)
     if not character:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Personagem do usuário não encontrado."
         )
-
-
 
     campaign_dict = campaign.model_dump()
     created_campaign = await campaign_model.create_campaign(user_id, campaign_dict)
@@ -77,13 +84,15 @@ async def create_new_campaign(
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=CampaignList)
 async def get_user_campaigns(current_user: dict = Depends(get_current_user)):
-    """Retorna todas as campanhas do usuário autenticado"""
+
+    """Retorna todas as campanhas do usuário autenticado."""
     campaigns = await campaign_model.get_campaigns_by_user(current_user["_id"])
     return {"campaigns": campaigns}
 
 @router.get("/active", status_code=status.HTTP_200_OK, response_model=CampaignList)
 async def get_active_campaigns(current_user: dict = Depends(get_current_user)):
-    """Retorna campanhas ativas do usuário autenticado"""
+
+    """Retorna as campanhas ativas do usuário autenticado."""
     campaigns = await campaign_model.get_active_campaigns_by_user(current_user["_id"])
     return {"campaigns": campaigns}
 
@@ -92,7 +101,7 @@ async def get_campaign(
     campaign_id: str, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Retorna uma campanha específica do usuário"""
+    """Retorna uma campanha específica do usuário."""
     campaign = await campaign_model.get_campaign_by_user_and_id(current_user["_id"], campaign_id)
     if not campaign:
         raise HTTPException(
@@ -106,7 +115,7 @@ async def get_campaign_with_details(
     campaign_id: str, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Retorna campanha com detalhes do usuário e personagem"""
+    """Retorna campanha com detalhes do usuário e personagem."""
     campaign = await campaign_model.get_campaign_with_details(campaign_id)
     if not campaign:
         raise HTTPException(
@@ -129,7 +138,7 @@ async def update_campaign_progress(
     progress: CampaignProgress, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Atualiza especificamente o progresso da campanha"""
+    """Atualiza o progresso da campanha do usuário."""
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -148,7 +157,7 @@ async def abandon_campaign(
     campaign_id: str, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Marca campanha como abandonada"""
+    """Marca uma campanha ativa como 'abandonada'."""
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -172,7 +181,7 @@ async def complete_campaign(
     campaign_id: str, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Marca campanha como completada"""
+    """Marca uma campanha ativa como 'completada'."""
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -196,7 +205,7 @@ async def delete_campaign(
     campaign_id: str, 
     current_user: dict = Depends(get_current_user)
 ):
-    """Deleta uma campanha"""
+    """Deleta uma campanha permanentemente."""
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -218,9 +227,7 @@ async def start_game(
     campaign_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """
-    Inicia uma partida, retornando a narração inicial e o primeiro conjunto de ações.
-    """
+    """Inicia uma partida, retornando narração e ações iniciais."""
     user_id = current_user["_id"]
     campaign = await campaign_model.get_campaign_by_user_and_id(user_id, campaign_id)
     if not campaign:
@@ -250,7 +257,7 @@ async def play_turn(
     payload: GameActionPayload,
     current_user: dict = Depends(get_current_user)
 ):
-    """Processa uma ação do jogador e retorna a narração da IA."""
+    """Processa uma ação do jogador e retorna o novo estado do jogo."""
     user_id = current_user["_id"]
     
     campaign = await campaign_model.get_campaign_by_user_and_id(user_id, campaign_id)
@@ -347,10 +354,7 @@ async def reset_campaign_progress(
     campaign_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """
-    Reseta o progresso de uma campanha para o estado inicial.
-    Útil para quando o jogador 'sai sem salvar'.
-    """
+    """Reseta o progresso de uma campanha para o estado inicial."""
     existing_campaign = await campaign_model.get_campaign_by_user_and_id(
         current_user["_id"], campaign_id
     )
@@ -375,9 +379,7 @@ async def resume_game(
     campaign_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """
-    Retoma uma partida, retornando a última narração e o conjunto de ações salvas.
-    """
+    """Retoma uma partida, retornando o último estado salvo."""
     user_id = current_user["_id"]
     campaign = await campaign_model.get_campaign_by_user_and_id(user_id, campaign_id)
     if not campaign:

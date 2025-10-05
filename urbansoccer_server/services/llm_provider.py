@@ -30,7 +30,7 @@ else:
 timeout = aiohttp.ClientTimeout(total=90)
 
 
-# FUNÇÕES DE BUFFER (ORIGINAIS)
+#FUNÇÕES DE BUFFER
 
 
 def convert_prompt_to_messages(prompt: str) -> list[dict]:
@@ -104,7 +104,7 @@ async def groq_request(messages: list[dict]) -> str | None:
     return None
 
 
-# NOVAS FUNÇÕES DE STREAMING
+#FUNÇÕES DE STREAMING
 
 
 async def streaming_google_aistudio_request(messages: list[dict]) -> AsyncGenerator[str, None]:
@@ -176,7 +176,7 @@ async def streaming_groq_request(messages: list[dict]) -> AsyncGenerator[str, No
                 continue
     raise Exception("Todos os modelos do Groq falharam no streaming.")
 
-# ORQUESTRADORES DE FALLBACK
+#ORQUESTRADORES DE FALLBACK
 
 async def generate_with_fallback(prompt: str) -> str:
     messages = convert_prompt_to_messages(prompt)

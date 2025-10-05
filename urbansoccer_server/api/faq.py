@@ -115,7 +115,7 @@ async def delete_faq_question(
             )
             
     except HTTPException:
-        raise  # Re-raise HTTPException para manter o status code
+        raise 
     except Exception as e:
         logger.error(f"Erro interno ao deletar pergunta {log_id} para usuário {user_id}: {e}")
         raise HTTPException(status_code=500, detail="Erro interno ao deletar pergunta")
@@ -174,7 +174,6 @@ async def get_conversation_with_messages(
     user_id = current_user["_id"]
     
     try:
-        # Busca a conversa
         conversation = await faq_log_model.get_conversation_by_id(conversation_id, user_id)
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversa não encontrada")
