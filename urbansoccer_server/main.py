@@ -1,7 +1,6 @@
-# urbansoccer_server/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from urbansoccer_server.api import users, players, campaigns, user_character
+from urbansoccer_server.api import users, players, campaigns, user_character, narration, faq
 from urbansoccer_server.core.database_init import initialize_database
 
 app = FastAPI(
@@ -10,24 +9,19 @@ app = FastAPI(
     version="0.2.0"
 )
 
-# <<< ALTERAÇÃO AQUI: Lista de origens permitidas
-# Adicione aqui os endereços do seu frontend.
-# É uma boa prática incluir tanto localhost quanto 127.0.0.1.
-origins = [
-    "http://localhost:4200",
-    "http://127.0.0.1:4200",
-]
 
-# Configuração do CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  
+    allow_origins=[
+        "https://urban-soccer.vercel.app",  
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition", "X-Conversation-ID"]
 )
-
-# Evento de inicialização
 @app.on_event("startup")
 async def startup_event():
     """Executa a inicialização do banco quando a aplicação inicia"""
@@ -37,6 +31,8 @@ app.include_router(users.router)
 app.include_router(players.router)
 app.include_router(campaigns.router)
 app.include_router(user_character.router)
+app.include_router(narration.router)
+app.include_router(faq.router)
 
 @app.get("/")
 def read_root():

@@ -7,20 +7,19 @@ services:
     volumes:
       - ./urbansoccer_server:/app/urbansoccer_server
     environment:
-      MONGO_URI: ${MONGO_URI}
-      MONGO_DB: ${MONGO_DB}
+      # Suas variáveis de ambiente
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: urbansoccer_db
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
-      COQUI_TTS_URL: ${COQUI_TTS_URL}
+      GOOGLE_AISTUDIO_KEY: ${GOOGLE_AISTUDIO_KEY}
+      CEREBRAS_KEY: ${CEREBRAS_KEY}
+      GROQ_KEY: ${GROQ_KEY}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
     depends_on:
       mongo:
         condition: service_healthy
-      ollama:
-        condition: service_started
-      coqui-tts:
-        condition: service_started
     command: uvicorn urbansoccer_server.main:app --host 0.0.0.0 --port 8000 --reload
 
   mongo:
@@ -37,32 +36,6 @@ services:
       timeout: 5s
       retries: 5
 
-  ollama:
-    image: ollama/ollama
-    container_name: urbansoccer_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
-
-  coqui-tts:
-    image: ghcr.io/coqui-ai/tts:latest
-    container_name: urbansoccer_tts
-    restart: unless-stopped
-    ports:
-      - "5002:5002"
-    volumes:
-      - coqui_tts_data:/root/.local/share/tts
-    environment:
-      - COQUI_TOS_AGREED=1
-    entrypoint: [
-      "tts-server", 
-      "--model_path", "/root/.local/share/tts/tts_models--multilingual--multi-dataset--xtts_v2/", 
-      "--config_path", "/root/.local/share/tts/tts_models--multilingual--multi-dataset--xtts_v2/config.json"
-    ]
 
 volumes:
   mongo_data:
-  ollama_data:
-  coqui_tts_data:

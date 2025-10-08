@@ -1,4 +1,3 @@
-# urbansoccer_server/core/auth.py
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
@@ -12,7 +11,9 @@ from urbansoccer_server.schemas.user_schema import TokenData
 security = HTTPBearer()
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+
     """Cria um token de acesso JWT"""
+    
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -23,7 +24,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+
     """Obtém o usuário atual baseado no token JWT"""
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Não foi possível validar as credenciais",
@@ -43,7 +46,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     if user is None:
         raise credentials_exception
     
-    # Remove a senha do retorno
     if "password" in user:
         del user["password"]
     return user
+

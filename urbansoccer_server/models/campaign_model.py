@@ -1,4 +1,3 @@
-# urbansoccer_server/models/campaign_model.py
 from pymongo import AsyncMongoClient
 from bson import ObjectId
 from typing import List, Optional
@@ -12,16 +11,18 @@ db = client[settings.MONGO_DB]
 campaign_collection = db["campaigns"]
 
 def normalize_campaign_data(campaign: dict) -> dict:
+
     """Normaliza dados da campanha para compatibilidade com schema novo"""
+
     if campaign:
         if "_id" in campaign:
             campaign["_id"] = str(campaign["_id"])
         
-        # Se tem playerId mas não tem userCharacterId, mantém ambos por compatibilidade
-        # Isso permite que campanhas antigas ainda funcionem
         if "playerId" in campaign and "userCharacterId" not in campaign:
-            # Por enquanto, mantemos o playerId até termos um mapeamento adequado
             campaign["userCharacterId"] = None
+        
+        if "lastPlayedDate" not in campaign:
+            campaign["lastPlayedDate"] = campaign.get("startDate")
     
     return campaign
 
@@ -32,7 +33,6 @@ async def create_campaign(user_id: str, campaign_data: dict) -> dict:
     campaign_data["lastPlayedDate"] = datetime.utcnow()
     campaign_data["status"] = "active"
     
-    # Define progresso inicial se não fornecido
     if "progress" not in campaign_data:
         campaign_data["progress"] = {
             "level": 1,
@@ -80,7 +80,6 @@ async def update_campaign(campaign_id: str, data_to_update: dict) -> Optional[di
     if not ObjectId.is_valid(campaign_id):
         return None
     
-    # Atualiza a data da última jogada automaticamente
     data_to_update["lastPlayedDate"] = datetime.utcnow()
     
     await campaign_collection.update_one(
@@ -106,7 +105,9 @@ async def update_campaign_progress(campaign_id: str, progress_data: dict) -> Opt
     return await get_campaign_by_id(campaign_id)
 
 async def delete_campaign(campaign_id: str) -> bool:
+
     """Deleta uma campanha"""
+
     if not ObjectId.is_valid(campaign_id):
         return False
     
@@ -114,20 +115,28 @@ async def delete_campaign(campaign_id: str) -> bool:
     return result.deleted_count > 0
 
 async def abandon_campaign(campaign_id: str) -> Optional[dict]:
+
     """Marca uma campanha como abandonada"""
+
     return await update_campaign(campaign_id, {"status": "abandoned"})
 
 async def complete_campaign(campaign_id: str) -> Optional[dict]:
+
     """Marca uma campanha como completada"""
+
     return await update_campaign(campaign_id, {"status": "completed"})
 
 async def get_campaigns_by_player(player_id: str) -> List[dict]:
+
     """Retorna todas as campanhas que usam um personagem específico"""
+
     campaigns = await campaign_collection.find({"playerId": player_id}).to_list(length=None)
     return [normalize_campaign_data(campaign) for campaign in campaigns]
 
 async def check_user_has_active_campaign_with_player(user_id: str, player_id: str) -> bool:
+
     """Verifica se o usuário já tem uma campanha ativa com este personagem"""
+
     campaign = await campaign_collection.find_one({
         "userId": user_id,
         "playerId": player_id,
@@ -180,9 +189,43 @@ async def get_campaign_with_details(campaign_id: str) -> Optional[dict]:
     if campaign:
         campaign = campaign[0]
         campaign = normalize_campaign_data(campaign)
-        # Remove senha do usuário se existir
         if campaign.get("user") and "password" in campaign["user"]:
             del campaign["user"]["password"]
         return campaign
     
     return None
+
+
+async def reset_campaign(campaign_id: str) -> Optional[dict]:
+
+    """
+    Reseta o progresso de uma campanha para seu estado inicial.
+    """
+
+    if not ObjectId.is_valid(campaign_id):
+        return None
+
+    default_progress = {
+        "level": 1,
+        "score": 0,
+        "opponent_score": 0,
+        "time": 0,
+        "currentMission": "Primeira Missão",
+        "inventory": [],
+        "availableCards": [],
+        "gameContext": "meio_campo"
+    }
+
+    
+    await campaign_collection.update_one(
+        {"_id": ObjectId(campaign_id)},
+        {
+            "$set": {
+                "status": "active",
+                "progress": default_progress,
+                "lastPlayedDate": datetime.utcnow()
+            }
+        }
+    )
+
+    return await get_campaign_by_id(campaign_id)

@@ -1,4 +1,3 @@
-# urbansoccer_server/core/database_init.py
 import logging
 import asyncio
 from datetime import datetime
@@ -58,50 +57,88 @@ DEFAULT_ADMIN_USER = {
     "password": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBdXwtO5S5bq5q"  # hash de "admin123"
 }
 
+async def ensure_collections_exist(db):
+    
+    """
+    Garante que todas as coleções necessárias existam no MongoDB.
+    O MongoDB só cria coleções quando o primeiro documento é inserido.
+    """
+
+    try:
+        collections_to_ensure = [
+            "players", 
+            "users", 
+            "campaigns", 
+            "user_characters", 
+            "faq_logs", 
+            "conversations"
+        ]
+        
+        existing_collections = await db.list_collection_names()
+        
+        for collection_name in collections_to_ensure:
+            if collection_name not in existing_collections:
+                # Cria a coleção inserindo e removendo um documento temporário
+                temp_collection = db[collection_name]
+                temp_doc = {"_temp": True, "created_at": datetime.utcnow()}
+                result = await temp_collection.insert_one(temp_doc)
+                await temp_collection.delete_one({"_id": result.inserted_id})
+            else:
+                logger.info(f"ℹ️ Coleção '{collection_name}' já existe")
+                
+    except Exception as e:
+        logger.error(f"❌ Erro ao garantir coleções: {e}")
+
 async def initialize_database():
+
     """Inicializa o banco de dados com dados padrão."""
+
     try:
         client = AsyncMongoClient(settings.MONGO_URI)
         db = client[settings.MONGO_DB]
         
-        # Collections
         player_collection = db["players"]
         user_collection = db["users"] 
         campaign_collection = db["campaigns"]
         user_character_collection = db["user_characters"]
+        faq_log_collection = db["faq_logs"]
+        conversations_collection = db["conversations"]
 
         try:
-            # Índices
             await user_collection.create_index("email", unique=True)
             await campaign_collection.create_index([("userId", 1)])
             await user_character_collection.create_index([("userId", 1), ("characterName", 1)], unique=True)
-            logger.info("✅ Índices criados com sucesso.")
+            
+            await faq_log_collection.create_index([("userId", 1), ("timestamp", -1)])  
+            await faq_log_collection.create_index([("timestamp", -1)])  
+            await faq_log_collection.create_index([("conversationId", 1), ("timestamp", 1)])  
+            
+            await conversations_collection.create_index([("userId", 1), ("updatedAt", -1)]) 
+            await conversations_collection.create_index([("userId", 1), ("createdAt", -1)])  
+            
         except Exception as e:
             logger.info(f"⚠️ Índices já existem ou erro: {e}")
         
-        # Verificar e criar players
         if await player_collection.count_documents({}) == 0:
-            logger.info("Criando players padrão...")
             for player in DEFAULT_PLAYERS:
                 player["createdAt"] = datetime.utcnow()
             await player_collection.insert_many(DEFAULT_PLAYERS)
         
-        # Verificar e criar usuário admin
         if not await user_collection.find_one({"email": DEFAULT_ADMIN_USER["email"]}):
-            logger.info("Criando usuário admin padrão...")
             admin_user = DEFAULT_ADMIN_USER.copy()
             admin_user["createdAt"] = datetime.utcnow()
-            # O hash da senha já está no objeto
             await user_collection.insert_one(admin_user)
 
-        logger.info("🚀 Inicialização do banco de dados concluída.")
+        await ensure_collections_exist(db)
+        
+
         await client.close()
         
     except Exception as e:
         logger.error(f"❌ Erro durante a inicialização do banco: {e}")
 
-# ... (o resto do arquivo, run_database_initialization, continua igual)
 def run_database_initialization():
+
     """Executa a inicialização do banco de forma síncrona"""
     try:
         try:

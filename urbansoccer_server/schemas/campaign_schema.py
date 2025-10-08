@@ -2,11 +2,21 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
+
+class Card(BaseModel):
+    actionId: str
+    label: str
+    description: str
+
 class CampaignProgress(BaseModel):
     level: int = Field(default=1, ge=1)
     score: int = Field(default=0, ge=0)
+    opponent_score: int = Field(default=0, ge=0)
+    time: int = Field(default=0, description="Representa o 'lance' atual do jogo") 
     currentMission: str = Field(default="Primeira Missão")
     inventory: List[str] = Field(default_factory=list)
+    availableCards: List[Card] = Field(default_factory=list) 
+    gameContext: str = Field(default="meio_campo", description="Situação atual da partida") 
 
 class CampaignBase(BaseModel):
     userId: str = Field(..., description="ID do usuário proprietário da campanha")
@@ -24,7 +34,9 @@ class CampaignCreate(BaseModel):
 
 
 class CampaignUpdate(BaseModel):
+
     """Schema para atualizações futuras na campanha."""
+
     campaignName: Optional[str] = None
     status: Optional[str] = None
     progress: Optional[CampaignProgress] = None
@@ -33,7 +45,7 @@ class CampaignPublic(CampaignBase):
     """Schema público que será retornado pela API."""
     id: str = Field(..., alias="_id")
     startDate: datetime
-    lastPlayedDate: datetime
+    lastPlayedDate: Optional[datetime] = None
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -49,7 +61,9 @@ class CampaignPublic(CampaignBase):
         return cls(**campaign_dict)
 
 class CampaignWithDetails(CampaignPublic):
+
     """Campaign com detalhes do usuário e player."""
+    
     user: Optional[dict] = None
     player: Optional[dict] = None
 
@@ -59,15 +73,12 @@ class CampaignList(BaseModel):
 class GameActionPayload(BaseModel):
     actionId: str = Field(..., description="O ID da ação que o jogador escolheu no card")
 
-class Card(BaseModel):
-    actionId: str
-    label: str
-    description: str
 
 class GameState(BaseModel):
     score: str
-    time: int # Representando os 'lances'
+    time: int 
     commentary: str
+    gameContext: str = Field(default="meio_campo", description="A situação atual no campo") 
 
 class PlayResponse(BaseModel):
     narration: str

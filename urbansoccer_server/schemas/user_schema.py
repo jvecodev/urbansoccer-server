@@ -1,4 +1,3 @@
-# urbansoccer_server/schemas/user_schema.py
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import List, Optional, Any
 from bson import ObjectId
@@ -25,7 +24,9 @@ class UserPublic(UserBase):
     
     @classmethod
     def from_mongo(cls, user_dict: dict) -> "UserPublic":
+
         """Converte um documento do MongoDB para UserPublic"""
+        
         if user_dict and "_id" in user_dict:
             user_dict["_id"] = str(user_dict["_id"])
         return cls(**user_dict)
