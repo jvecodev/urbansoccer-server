@@ -33,7 +33,7 @@ A API é construída utilizando uma stack moderna de Python, focada em performan
     -   **python-jose**: Para codificar, decodificar e assinar tokens JWT.
 
 -   **Inteligência Artificial e LLMs**:
-    -   **LiteLLM**: Uma camada de abstração para chamar mais de 100 serviços de LLM diferentes usando um formato de entrada consistente.
+    -   **Abstração**: Criei minha própria camada de abstração para utilizar as demais Inteligencias, no arquivo llm_provider.
     -   **Google AI Studio**: Integrado para usar os modelos da família **Gemini** (ex: `gemini-2.5-flash`).
     -   **Groq**: Para acesso a modelos de alta velocidade, como o **Llama 3** (`llama3-70b-8192`).
     -   **Cerebras**: Para acesso aos modelos **Llama 3.1** (`llama3.1-8b`, `llama3.1-70b`).
